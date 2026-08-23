@@ -111,7 +111,7 @@ jobs:
       # the CLI defaults; the runner's SDK manager picks up anything missing (licenses accepted).
       - name: Generate the Android project
         shell: bash
-        run: cargo tauri android init
+        run: tauri android init
 
       - name: Extract libmpv.so (arm64) from mpv-android
         shell: bash
