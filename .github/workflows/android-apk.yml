@@ -10,9 +10,10 @@ name: Android APK
 # later if Android releases become real.
 #
 # THE THREE NATIVE PIECES this job has to assemble that the desktop jobs get for free:
-#   1. libmpv.so (arm64) — extracted from the official mpv-android release APK into jniLibs, and
-#      handed to the Rust linker via RUSTFLAGS `-L native=` (libmpv2-sys emits plain
-#      `cargo:rustc-link-lib=mpv`; no headers, no pkg-config).
+#   1. libmpv.so (arm64) — extracted from the official mpv-android release APK into jniLibs (for
+#      APK packaging) AND into the NDK sysroot's triple lib dir, where the linker already
+#      searches for `cargo:rustc-link-lib=mpv`. The sysroot copy is what makes linking work: the
+#      Tauri CLI injects target-scoped RUSTFLAGS that would override any -L we export.
 #   2. The Android project itself (`src-tauri/gen/android`) — gitignored, regenerated here by
 #      `tauri android init`. Any manual tweak made locally must be reproducible in this step.
 #   3. Cross-compile toolchain env — the Tauri CLI wires CC/AR/linker from NDK_HOME itself;
@@ -87,25 +88,24 @@ jobs:
         shell: bash
         run: (cd ui && pnpm build)
 
-      # RUSTFLAGS before rust-cache — see windows-release.yml for why this ordering is load-bearing.
-      # The jniLibs dir doesn't exist until `tauri android init` runs below; a -L search path to a
-      # not-yet-existing directory costs nothing until link time, by which point it exists.
-      - name: Resolve RUSTFLAGS (libmpv link path)
-        shell: bash
-        run: |
-          FLAGS="-L native=${{ github.workspace }}/${JNI_DIR}"
-          echo "RUSTFLAGS=$FLAGS" >> "$GITHUB_ENV"
-          echo "RUSTFLAGS=$FLAGS"
+      # RUSTFLAGS note: the Tauri CLI injects its own target-scoped
+      # CARGO_TARGET_*_RUSTFLAGS (-landroid -llog -lOpenSLES), which overrides any generic
+      # RUSTFLAGS we export — so we don't fight it. Instead the libmpv.so below is copied into the
+      # NDK sysroot's triple lib dir, where the linker already searches for `-lmpv`.
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: . -> target
           prefix-key: android-arm64
 
+      # Prebuilt cargo-tauri, not the npm CLI: the Android gradle project's rustBuild tasks
+      # resolve the CLI themselves, and a globally npm-installed one breaks there with
+      # "Cannot find module …/src-tauri/tauri". The cargo subcommand is the shape the generated
+      # gradle expects. Prebuilt binary — compiling tauri-cli costs ~5 min for nothing.
       - name: Tauri CLI
-        shell: bash
-        # Prebuilt binary — `cargo install tauri-cli` would compile for ~5 min for nothing.
-        run: npm install -g "@tauri-apps/cli@^2"
+        uses: taiki-e/install-action@v2
+        with:
+          tool: tauri-cli
 
       # Regenerates the gitignored Android project fresh each run. compileSdk/targetSdk come from
       # the CLI defaults; the runner's SDK manager picks up anything missing (licenses accepted).
@@ -120,7 +120,13 @@ jobs:
           curl -fsSL --max-time 120 -o /tmp/mpv-android.apk "$MPV_ANDROID_APK_URL"
           mkdir -p "$JNI_DIR"
           unzip -j -o /tmp/mpv-android.apk "lib/arm64-v8a/libmpv.so" -d "$JNI_DIR"
-          ls -la "$JNI_DIR"
+
+          # Second copy into the NDK sysroot's triple lib dir: the linker searches there for
+          # `-lmpv`, and this survives the CLI's RUSTFLAGS injection (see note above).
+          SYSROOT_LIB="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24"
+          cp "$JNI_DIR/libmpv.so" "$SYSROOT_LIB/libmpv.so"
+
+          ls -la "$JNI_DIR" "$SYSROOT_LIB/libmpv.so"
           test -f "$JNI_DIR/libmpv.so" || { echo "::error::libmpv.so missing from mpv-android APK"; exit 1; }
 
       - name: Build the debug APK (arm64)
