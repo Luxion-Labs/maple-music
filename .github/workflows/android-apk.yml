@@ -1,0 +1,141 @@
+name: Android APK
+
+# Builds an installable arm64 debug APK of Maple for Android. Dispatch-only while the mobile
+# port is young — flip to a release trigger once it earns one.
+#
+# WHY DEBUG: a signed release APK needs a signing key that stays identical between runs or
+# updates can't install over an earlier build. We have no committed keystore yet, and a keystore
+# minted per-run would change every time — which is exactly what the debug variant does anyway,
+# with zero extra plumbing. So: debug now (uninstall/reinstall between runs), committed keystore
+# later if Android releases become real.
+#
+# THE THREE NATIVE PIECES this job has to assemble that the desktop jobs get for free:
+#   1. libmpv.so (arm64) — extracted from the official mpv-android release APK into jniLibs, and
+#      handed to the Rust linker via RUSTFLAGS `-L native=` (libmpv2-sys emits plain
+#      `cargo:rustc-link-lib=mpv`; no headers, no pkg-config).
+#   2. The Android project itself (`src-tauri/gen/android`) — gitignored, regenerated here by
+#      `tauri android init`. Any manual tweak made locally must be reproducible in this step.
+#   3. Cross-compile toolchain env — the Tauri CLI wires CC/AR/linker from NDK_HOME itself;
+#      bindgen (via rquickjs-sys) additionally needs BINDGEN_EXTRA_CLANG_ARGS pointed at the NDK
+#      sysroot or it parses quickjs.h against host headers and produces wrong-size bindings.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned mpv-android release. Only lib/arm64-v8a/libmpv.so is used from inside it.
+  MPV_ANDROID_APK_URL: https://github.com/mpv-android/mpv-android/releases/download/2026-08-11/app-default-arm64-v8a-release.apk
+  JNI_DIR: src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Rust (stable + Android target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      # pnpm before setup-node so `cache: pnpm` can find the binary — same shape as the other jobs.
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+
+      # AGP wants JDK 17+; 21 is what the local machine has.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Frontend deps
+        shell: bash
+        run: cd ui && pnpm install --frozen-lockfile
+
+      # Locate the NDK the runner ships and teach bindgen where the Android sysroot lives.
+      # Without BINDGEN_EXTRA_CLANG_ARGS, rquickjs-sys's bindgen pass generates bindings sized
+      # for the HOST and the quickjs build fails or misbehaves downstream.
+      - name: Android toolchain env
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)"
+          TC="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+          [ -d "$TC/sysroot" ] || { echo "::error::NDK sysroot not found under $NDK"; exit 1; }
+          echo "NDK_HOME=$NDK" >> "$GITHUB_ENV"
+          echo "BINDGEN_EXTRA_CLANG_ARGS=--sysroot=$TC/sysroot --target=aarch64-linux-android24" >> "$GITHUB_ENV"
+          echo "NDK: $NDK"
+
+      - name: Frontend build
+        shell: bash
+        run: (cd ui && pnpm build)
+
+      # RUSTFLAGS before rust-cache — see windows-release.yml for why this ordering is load-bearing.
+      # The jniLibs dir doesn't exist until `tauri android init` runs below; a -L search path to a
+      # not-yet-existing directory costs nothing until link time, by which point it exists.
+      - name: Resolve RUSTFLAGS (libmpv link path)
+        shell: bash
+        run: |
+          FLAGS="-L native=${{ github.workspace }}/${JNI_DIR}"
+          echo "RUSTFLAGS=$FLAGS" >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=$FLAGS"
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: . -> target
+          prefix-key: android-arm64
+
+      - name: Tauri CLI
+        shell: bash
+        # Prebuilt binary — `cargo install tauri-cli` would compile for ~5 min for nothing.
+        run: npm install -g "@tauri-apps/cli@^2"
+
+      # Regenerates the gitignored Android project fresh each run. compileSdk/targetSdk come from
+      # the CLI defaults; the runner's SDK manager picks up anything missing (licenses accepted).
+      - name: Generate the Android project
+        shell: bash
+        run: cargo tauri android init
+
+      - name: Extract libmpv.so (arm64) from mpv-android
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 120 -o /tmp/mpv-android.apk "$MPV_ANDROID_APK_URL"
+          mkdir -p "$JNI_DIR"
+          unzip -j -o /tmp/mpv-android.apk "lib/arm64-v8a/libmpv.so" -d "$JNI_DIR"
+          ls -la "$JNI_DIR"
+          test -f "$JNI_DIR/libmpv.so" || { echo "::error::libmpv.so missing from mpv-android APK"; exit 1; }
+
+      - name: Build the debug APK (arm64)
+        shell: bash
+        # beforeBuildCommand emptied: we just ran `pnpm build` ourselves. Left on, tauri runs
+        # `pnpm build` from the repo root, which has no package.json (see windows-release.yml).
+        run: >
+          tauri android build --apk --debug --target aarch64
+          --config '{"build":{"beforeBuildCommand":""}}'
+
+      # Artifacts are not release assets — nothing user-facing ships from this job yet.
+      - name: Upload the APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: maple-android-debug-arm64
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
