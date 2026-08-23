@@ -111,7 +111,7 @@ jobs:
       # the CLI defaults; the runner's SDK manager picks up anything missing (licenses accepted).
       - name: Generate the Android project
         shell: bash
-        run: tauri android init
+        run: cargo tauri android init
 
       - name: Extract libmpv.so (arm64) from mpv-android
         shell: bash
@@ -134,7 +134,7 @@ jobs:
         # beforeBuildCommand emptied: we just ran `pnpm build` ourselves. Left on, tauri runs
         # `pnpm build` from the repo root, which has no package.json (see windows-release.yml).
         run: >
-          tauri android build --apk --debug --target aarch64
+          cargo tauri android build --apk --debug --target aarch64
           --config '{"build":{"beforeBuildCommand":""}}'
 
       # Artifacts are not release assets — nothing user-facing ships from this job yet.
