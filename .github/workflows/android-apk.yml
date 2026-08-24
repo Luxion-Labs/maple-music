@@ -1,7 +1,9 @@
 name: Android APK
 
-# Builds an installable arm64 debug APK of Maple for Android. Dispatch-only while the mobile
-# port is young — flip to a release trigger once it earns one.
+# Builds an installable arm64 debug APK of Maple for Android.
+#
+# Every push to main gets a fresh APK (Actions ▸ latest run ▸ maple-android-debug-arm64).
+# workflow_dispatch stays for rebuilds/backfills with no code change.
 #
 # WHY DEBUG: a signed release APK needs a signing key that stays identical between runs or
 # updates can't install over an earlier build. We have no committed keystore yet, and a keystore
@@ -21,6 +23,10 @@ name: Android APK
 #      sysroot or it parses quickjs.h against host headers and produces wrong-size bindings.
 
 on:
+  push:
+    branches: [main]
+    # Docs and the marketing site don't change the app — don't burn a 10-minute build on them.
+    paths-ignore: ["website/**", "**/*.md", "assets/**"]
   workflow_dispatch:
 
 permissions:
