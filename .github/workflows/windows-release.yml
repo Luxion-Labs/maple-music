@@ -308,8 +308,15 @@ jobs:
             done
             return 1
           }
-          fetch_manifest() { # fetch_manifest <dir>
-            rm -rf "$1" && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1"
+          fetch_manifest() { # fetch_manifest <dir> — seeds an empty manifest only for the merge dir
+            if [ "$1" = manifest ] && \
+               ! gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1" 2>/dev/null; then
+              rm -rf "$1"; mkdir -p "$1"
+              printf '{"version":"%s","platforms":{}}\n' "$VERSION" > "$1/latest.json"
+              echo "::notice::release had no latest.json — seeded an empty manifest for $VERSION"
+            else
+              rm -rf "$1" && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1"
+            fi
           }
 
           EXE="target/release/bundle/nsis/maple_${VERSION}_x64-setup.exe"

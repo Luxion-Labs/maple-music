@@ -53,12 +53,43 @@
 					el.querySelector('pre').textContent = window.__mapleErrors.join('\n---\n');
 				} catch (_) {}
 			};
-			window.addEventListener('error', function (e) {
-				show((e.error && e.error.stack) || e.message || e.filename);
-			});
+			window.addEventListener(
+				'error',
+				function (e) {
+					// Resource loads (script/css 404s) arrive as error events with a target, no message —
+					// and they are exactly what a white screen usually is. Capture phase catches them.
+					var t = e.target;
+					if (t && (t.src || t.href)) {
+						show('FAILED TO LOAD: ' + (t.src || t.href));
+						return;
+					}
+					show((e.error && e.error.stack) || e.message || String(e));
+				},
+				true
+			);
 			window.addEventListener('unhandledrejection', function (e) {
 				show('unhandled rejection: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason));
 			});
+			// Watchdog: if the SPA hasn't mounted shortly after boot, print what we know about the
+			// environment onto the screen itself, so a dead app explains itself with no PC attached.
+			setTimeout(function () {
+				if (window.__mapleMounted) return;
+				var js = performance.getEntriesByType('resource').filter(function (r) {
+					return /\.js($|\?)/.test(r.name);
+				});
+				var failed = js.filter(function (r) {
+					return r.responseStatus && r.responseStatus >= 400;
+				});
+				show(
+					[
+						'BOOT WATCHDOG: UI did not mount within 5s',
+						'location:    ' + location.href,
+						'__TAURI__:   ' + '__TAURI_INTERNALS__' in window,
+						'js loaded:   ' + js.length + ' (' + (failed.length ? 'FAILED: ' + failed.map(function (r) { return r.name; }).join(', ') : 'none failed') + ')',
+						'ua:          ' + navigator.userAgent
+					].join('\n')
+				);
+			}, 5000);
 			window.__mapleClearBootErrors = function () {
 				var el = document.getElementById('maple-boot-errors');
 				if (el) el.remove();

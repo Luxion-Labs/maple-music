@@ -72,6 +72,7 @@
 	// on every app open (silent unless one exists).
 	onMount(() => {
 		// The boot-error trap in app.html has done its job once the SPA mounted cleanly.
+		(window as any).__mapleMounted = true;
 		(window as any).__mapleClearBootErrors?.();
 		if (isMini) return initApp(true);
 		if (chromeless) {
