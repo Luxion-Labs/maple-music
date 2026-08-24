@@ -383,10 +383,13 @@ pub(crate) fn open_browser(url: &str) -> Result<(), String> {
         std::process::Command::new("cmd").raw_arg(format!("/C start \"\" \"{url}\"")).spawn()
     };
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-    let cmd: std::io::Result<std::process::Child> = Err(std::io::Error::new(
-        std::io::ErrorKind::Unsupported,
-        "opening a browser is unsupported on this platform",
-    ));
+    let cmd: std::io::Result<std::process::Child> = {
+        let _ = url; // no browser to open on this platform (Android) — silence unused
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "opening a browser is unsupported on this platform",
+        ))
+    };
     cmd.map(|_| ()).map_err(|e| format!("Couldn't open the browser: {e}"))
 }
 

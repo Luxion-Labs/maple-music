@@ -171,6 +171,8 @@ pub fn run() {
         )
         .init();
 
+    // `mut` is desktop-only: every `.plugin()` reassignment below sits behind cfg(desktop).
+    #[cfg_attr(not(desktop), allow(unused_mut))]
     let mut builder = tauri::Builder::default();
     #[cfg(desktop)]
     {

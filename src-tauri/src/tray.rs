@@ -34,6 +34,8 @@ pub use imp::{init, set_playing};
 /// Bring the main window back from close-to-tray, minimize, or the mini player. Every "come back"
 /// path — tray menu, tray click, second launch, the widget's restore button — goes through here so
 /// they can't drift apart.
+// Mobile has no tray and no second-launch handler, so nothing there calls this; desktop does.
+#[cfg_attr(not(desktop), allow(dead_code))]
 pub fn show_main(app: &AppHandle) {
     #[cfg(desktop)]
     crate::mini::close(app);
@@ -46,6 +48,8 @@ pub fn show_main(app: &AppHandle) {
 }
 
 /// Shared by both backends: menu ids are the contract between them.
+// Same story as show_main — the tray menu itself is a desktop surface.
+#[cfg_attr(not(desktop), allow(dead_code))]
 fn handle_menu(app: &AppHandle, id: &str) {
     match id {
         "show" => show_main(app),
