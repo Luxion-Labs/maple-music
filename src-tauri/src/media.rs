@@ -12,7 +12,12 @@
 #[cfg(desktop)]
 mod desktop_impl;
 #[cfg(desktop)]
-pub use desktop_impl::{handle_event, spawn, MediaHandle};
+pub use desktop_impl::{spawn, MediaHandle};
+// Windows' taskbar toolbar routes clicks through here; on other desktops nothing needs it past
+// this module (souvlaki's attach callback lives inside desktop_impl), so gate the re-export or
+// every non-Windows build warns unused.
+#[cfg(all(desktop, target_os = "windows"))]
+pub(crate) use desktop_impl::handle_event;
 
 /// Non-desktop (Android): no OS media-controls surface yet. [`AppState`] expects the type to
 /// exist, so provide an inert one; `spawn` hands back `None`.
