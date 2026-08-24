@@ -235,6 +235,8 @@ pub fn run() {
                 tracing::info!("loaded persisted login session");
             }
 
+            // Only the desktop prewarm tasks below read this; Android mints lazily per-video.
+            #[cfg(desktop)]
             let visitor_for_prewarm = visitor_data.clone();
             let session = Session { locale: Locale::default(), visitor_data, data_sync_id, cookie };
             let it = InnerTube::new(session, proxy.as_deref()).expect("build InnerTube");

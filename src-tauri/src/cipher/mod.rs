@@ -183,6 +183,7 @@ impl CipherDeobfuscator {
 
     /// Warm the player.js disk cache + analysis off the first-play path (context/04 §startup); the
     /// cipher webview is only built when the player turns out to be decipherable. Non-fatal.
+    #[cfg(desktop)] // its only caller is the desktop prewarm task in lib.rs (no webviews on mobile)
     pub async fn prewarm(&self) {
         if let Err(e) = self.ensure_analyzed().await {
             tracing::warn!(error = %e, "cipher prewarm failed (will retry on demand)");

@@ -347,6 +347,8 @@ impl PoTokenGenerator {
     }
 
     /// Warm the PoToken webview for `visitor_data` (context/04 §startup). Non-fatal.
+    /// Desktop-only: Android mints lazily per-video instead (no hidden webviews there).
+    #[cfg(desktop)]
     pub async fn prewarm(&self, visitor_data: &str) {
         if self.webview_bad.load(Ordering::SeqCst) {
             return;
@@ -374,6 +376,7 @@ impl PoTokenGenerator {
     /// Tear down the webview if it's been idle longer than `idle` — the mint-and-destroy memory
     /// policy (Phase-0 decision): keep it warm while the queue mints, drop it when idle.
     // ponytail: called from a periodic task in lib.rs; no self-spawned monitor.
+    #[cfg(desktop)] // its only caller is the desktop idle-loop in lib.rs
     pub async fn teardown_if_idle(&self, idle: Duration) {
         let mut guard = self.minter.lock().await;
         if let Some(m) = guard.as_ref() {
