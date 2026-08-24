@@ -260,13 +260,15 @@
 			<Dialog.Description class="sr-only">Application settings</Dialog.Description>
 		</div>
 
-		<div class="flex h-[28rem]">
+		<!-- Phone: the rail becomes a horizontal tab strip and the whole sheet goes taller/narrower
+		     — the desktop two-pane doesn't fit 360dp. -->
+		<div class="flex h-[32rem] flex-col sm:h-[28rem] sm:flex-row">
 			<!-- Tab rail -->
-			<nav class="w-48 shrink-0 border-r p-2">
+			<nav class="flex shrink-0 overflow-x-auto border-b p-2 sm:w-48 sm:flex-col sm:border-b-0 sm:border-r">
 				{#each TABS as t (t.id)}
 					<button
 						onclick={() => (tab = t.id)}
-						class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors {tab ===
+						class="w-full whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors {tab ===
 						t.id
 							? 'bg-accent text-accent-foreground'
 							: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}"
