@@ -1318,4 +1318,3 @@ mod tests {
         assert!(boidu.lines.iter().any(|l| l.words.is_some()));
     }
 }
-

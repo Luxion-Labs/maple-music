@@ -91,9 +91,7 @@ impl Bridge {
                 .initialization_script(init);
 
             #[cfg(desktop)]
-            let builder = builder
-                .skip_taskbar(true)
-                .decorations(false);
+            let builder = builder.skip_taskbar(true).decorations(false);
 
             let res = builder
                 .on_page_load(move |_wv, payload| {
@@ -281,4 +279,3 @@ pub(crate) async fn destroy_and_wait(app: &AppHandle, label: &str) {
     }
     tracing::warn!(label, "webview label still present after destroy — create may collide");
 }
-

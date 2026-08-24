@@ -179,4 +179,3 @@ mod tests {
         assert!(!contains(primary.0, primary.1, PhysicalPosition::new(500, 1080)));
     }
 }
-

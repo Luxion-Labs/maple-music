@@ -1,7 +1,7 @@
 fn main() {
     // Last.fm API credentials live in a gitignored `lastfm.keys` next to this file (the repo is
-// public — they must never be tracked). Format: `MAPLE_LASTFM_API_KEY=…` and
-// `MAPLE_LASTFM_API_SECRET=…`, one per line. Exported as compile-time env for `option_env!`
+    // public — they must never be tracked). Format: `MAPLE_LASTFM_API_KEY=…` and
+    // `MAPLE_LASTFM_API_SECRET=…`, one per line. Exported as compile-time env for `option_env!`
     // in lastfm.rs; missing file just means the scrobbler reports "not configured".
     println!("cargo:rerun-if-changed=lastfm.keys");
     if let Ok(keys) = std::fs::read_to_string("lastfm.keys") {

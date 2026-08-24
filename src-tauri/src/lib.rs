@@ -175,34 +175,34 @@ pub fn run() {
     #[cfg(desktop)]
     {
         builder = builder
-        // Must be the first plugin registered (its documented requirement). A second launch —
-        // e.g. clicking the app icon while we're hidden in the tray — re-shows this instance
-        // instead of spawning a second one (which would fight over SQLite and mpv).
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            tray::show_main(app);
-        }))
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init())
-        // Folder picker for the local-music library (local.rs).
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
-        ))
-        // Reopen at the size/position the window was left at. Only "main": the mini widget is
-        // fixed-size and the login/cipher/PoToken webviews are windows too. Size, position and
-        // maximized only — VISIBLE would restore a window hidden to the tray as invisible, and
-        // DECORATIONS would fight the custom titlebar.
-        .plugin(
-            tauri_plugin_window_state::Builder::new()
-                .with_state_flags(
-                    tauri_plugin_window_state::StateFlags::SIZE
-                        | tauri_plugin_window_state::StateFlags::POSITION
-                        | tauri_plugin_window_state::StateFlags::MAXIMIZED,
-                )
-                .with_filter(|label| label == "main")
-                .build(),
-        );
+            // Must be the first plugin registered (its documented requirement). A second launch —
+            // e.g. clicking the app icon while we're hidden in the tray — re-shows this instance
+            // instead of spawning a second one (which would fight over SQLite and mpv).
+            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+                tray::show_main(app);
+            }))
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_process::init())
+            // Folder picker for the local-music library (local.rs).
+            .plugin(tauri_plugin_dialog::init())
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                None,
+            ))
+            // Reopen at the size/position the window was left at. Only "main": the mini widget is
+            // fixed-size and the login/cipher/PoToken webviews are windows too. Size, position and
+            // maximized only — VISIBLE would restore a window hidden to the tray as invisible, and
+            // DECORATIONS would fight the custom titlebar.
+            .plugin(
+                tauri_plugin_window_state::Builder::new()
+                    .with_state_flags(
+                        tauri_plugin_window_state::StateFlags::SIZE
+                            | tauri_plugin_window_state::StateFlags::POSITION
+                            | tauri_plugin_window_state::StateFlags::MAXIMIZED,
+                    )
+                    .with_filter(|label| label == "main")
+                    .build(),
+            );
     }
     builder
         .setup(|app| {
@@ -661,5 +661,3 @@ mod tests {
         assert!(t.should_emit(5.0, Instant::now()));
     }
 }
-
-

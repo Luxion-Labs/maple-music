@@ -792,5 +792,3 @@ mod tests {
         assert_eq!(discord_thumb(&long), None, "over-long URLs are dropped, not sent");
     }
 }
-
-

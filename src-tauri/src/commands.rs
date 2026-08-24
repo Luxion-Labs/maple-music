@@ -237,16 +237,16 @@ pub async fn set_setting(
     if key == "autostart" {
         #[cfg(desktop)]
         {
-        use tauri_plugin_autostart::ManagerExt;
-        let al = _app.autolaunch();
-        let res = if value == "true" {
-            al.enable()
-        } else if al.is_enabled().unwrap_or(false) {
-            al.disable()
-        } else {
-            Ok(())
-        };
-        res.map_err(|e| format!("autostart: {e}"))?;
+            use tauri_plugin_autostart::ManagerExt;
+            let al = _app.autolaunch();
+            let res = if value == "true" {
+                al.enable()
+            } else if al.is_enabled().unwrap_or(false) {
+                al.disable()
+            } else {
+                Ok(())
+            };
+            res.map_err(|e| format!("autostart: {e}"))?;
         }
     }
     Ok(())
