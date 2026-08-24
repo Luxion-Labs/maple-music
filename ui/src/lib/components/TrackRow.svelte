@@ -13,6 +13,7 @@
 	import { thumb } from '$lib/thumb';
 	import { lt } from '$lib/lt.svelte';
 	import { anySaved, isLiked, ratingOf, savedPlaylists, toggleRating } from '$lib/player.svelte';
+import { isMobile } from '$lib/mobile.svelte';
 	import SavedInPlaylists from './SavedInPlaylists.svelte';
 	import TrackMenu from './TrackMenu.svelte';
 	import ArtistLine from './ArtistLine.svelte';
@@ -216,10 +217,9 @@
 			     only place the state shows at all. Faded rather than removed, so the duration and the ⋯
 			     don't shift sideways when the pointer arrives. -->
 			<div
-				class="flex items-center gap-0.5 transition-opacity focus-within:opacity-100 group-hover:opacity-100 {rated ===
-				'indifferent'
-					? 'opacity-0'
-					: ''}"
+				class="flex items-center gap-0.5 transition-opacity focus-within:opacity-100 {isMobile
+					? ''
+					: 'group-hover:opacity-100'} {rated === 'indifferent' && !isMobile ? 'opacity-0' : ''}"
 			>
 				{@render rateButton(ThumbsUpIcon, 'like', 'Like')}
 				{@render rateButton(ThumbsDownIcon, 'dislike', 'Dislike')}
@@ -250,7 +250,7 @@
 			{onAdd}
 			{onRemove}
 			{removeLabel}
-			triggerClass="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground focus-visible:opacity-100 {compact
+			triggerClass="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground focus-visible:opacity-100 {compact || isMobile
 				? ''
 				: 'opacity-0 group-hover:opacity-100'}"
 		/>

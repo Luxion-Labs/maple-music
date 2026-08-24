@@ -6,7 +6,8 @@
 	import {
 		CheckmarkCircle02Icon,
 		AlertCircleIcon,
-		InformationCircleIcon
+		InformationCircleIcon,
+		Menu01Icon
 	} from '@hugeicons/core-free-icons';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
@@ -29,7 +30,8 @@
 	import MiniPlayer from '$lib/components/MiniPlayer.svelte';
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { auth, initApp, inTauri, np, playback, ui } from '$lib/player.svelte';
+		import { auth, initApp, inTauri, np, playback, ui } from '$lib/player.svelte';
+	import { closeDrawer, drawer, isMobile } from '$lib/mobile.svelte';
 	import { win, initWin } from '$lib/win.svelte';
 	import { initZoom } from '$lib/zoom';
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
@@ -57,10 +59,6 @@
 	// Guarded on `inTauri`: getCurrentWindow() reads Tauri's injected internals and THROWS in a
 	// plain browser — that was the white screen, caught by the boot-error trap in app.html.
 	const isMini = inTauri && getCurrentWindow().label === 'mini';
-
-	// Phones/tablets: no window controls to draw, no resize borders, no desktop-only boot. Detected
-	// off the UA because Tauri's platform cfg lives in Rust, not here.
-	const isMobile = browser && /Android|iPhone|iPad/i.test(navigator.userAgent);
 
 	// Plain-browser `vite dev`: render the shell with empty data, skip everything desktop.
 	const chromeless = !inTauri || isMobile;
@@ -111,6 +109,29 @@
 		{#if !chromeless}
 			<ResizeBorders />
 			<Titlebar />
+		{:else if isMobile}
+			<!-- Mobile top bar: the drawer's handle + brand. Slim on purpose — the PlayerBar and page
+			     headers already own most of the vertical budget on a phone. -->
+			<div class="flex h-12 shrink-0 items-center gap-1 border-b bg-sidebar px-2 text-sidebar-foreground">
+				<Button
+					variant="ghost"
+					size="icon"
+					class="size-10"
+					onclick={() => (drawer.open = true)}
+					aria-label="Open menu"
+				>
+					<HugeiconsIcon icon={Menu01Icon} strokeWidth={2} class="h-5 w-5" />
+				</Button>
+				<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
+			</div>
+		{/if}
+		<!-- Drawer backdrop: taps outside close it. Above content (z-30 panels, z-40 drawer). -->
+		{#if isMobile && drawer.open}
+			<button
+				class="fixed inset-0 z-30 bg-black/50 backdrop-blur-[1px]"
+				onclick={closeDrawer}
+				aria-label="Close menu"
+			></button>
 		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
 		<div class="relative flex min-h-0 flex-1">
@@ -133,7 +154,10 @@
 			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
 			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
 			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
-			<div class="relative z-20" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
+			<div
+				class="relative z-20 {isMobile ? 'pb-[env(safe-area-inset-bottom)]' : ''}"
+				in:fly={{ y: 64, duration: 250, easing: cubicOut }}
+			>
 				<PlayerBar
 					onToggleQueue={() => (tabbed ? (np.tab = 'queue') : (queueOpen = !queueOpen))}
 					queueOpen={tabbed ? np.tab === 'queue' : queueOpen}
