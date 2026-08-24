@@ -91,13 +91,32 @@ impl Player {
         mpv.set_property("cache", "yes")?;
         mpv.set_property("cache-on-disk", "yes")?;
         mpv.set_property("demuxer-cache-dir", cache_dir)?;
-        // On-device only: mpv logs to stderr, which Android pipes into logcat under
-        // RustStdoutStderr. Verbose is the only way to see WHY mpv rejects a stream that the
-        // orchestrator just HEAD-validated (the Android playback failure showed as a generic
-        // LoadingFailed). Desktop keeps default levels — its failures are reproducible locally.
+        // On-device only, two things Android needs that desktop gets for free:
+        //
+        // 1. TLS root certificates. ffmpeg's TLS layer verifies against a PEM file, and there is
+        //    no system store it can find inside an Android app sandbox (/etc/ssl/certs doesn't
+        //    exist there), so every https open failed verification and surfaced as a generic
+        //    LoadingFailed — the "YouTube rejected the stream link" loop. mpv-android ships
+        //    Mozilla's cacert.pem as an asset for exactly this reason; we embed the same file
+        //    (CI extracts it from the same pinned release as libmpv.so) and point tls-ca-file at
+        //    a copy written into the cache dir, since mpv needs a real filesystem path.
+        // 2. Log visibility. msg-level only drives terminal output, which libmpv suppresses;
+        //    messages actually surface through the event API (LogMessage), so request them here
+        //    (mpv_request_log_messages is not wrapped by libmpv2) and forward to tracing from the
+        //    event loop — on Android tracing lands in logcat via RustStdoutStderr.
         #[cfg(target_os = "android")]
         {
-            let _ = mpv.set_property("msg-level", "all=v");
+            const CACERT_PEM: &[u8] = include_bytes!("../cacert.pem");
+            let cert_path = std::path::Path::new(cache_dir).join("cacert.pem");
+            match cert_path.to_str().filter(|_| std::fs::write(&cert_path, CACERT_PEM).is_ok()) {
+                Some(path) => {
+                    let _ = mpv.set_property("tls-ca-file", path);
+                }
+                None => tracing::warn!("couldn't write cacert.pem into {}", cache_dir),
+            }
+            unsafe {
+                libmpv2_sys::mpv_request_log_messages(mpv.ctx.as_ptr(), c"info".as_ptr());
+            }
         }
         let mpv = Arc::new(mpv);
 
@@ -330,6 +349,10 @@ fn event_loop(mut ev: EventContext, tx: tokio::sync::mpsc::UnboundedSender<Playe
                         ..
                     } => {
                         idle = i;
+                        None
+                    }
+                    Event::LogMessage { prefix, level, text, .. } => {
+                        tracing::info!(target: "mpv", "[{prefix}:{level}] {}", text.trim_end());
                         None
                     }
                     Event::EndFile(reason) => match reason as i32 {
