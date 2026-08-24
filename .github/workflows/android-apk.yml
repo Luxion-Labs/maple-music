@@ -156,7 +156,7 @@ jobs:
           if [ ! -f maple-release.jks ]; then
             keytool -genkeypair -keystore maple-release.jks -alias maple \
               -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass maple -keypass maple -dname "CN=Maple"
+              -storepass maple123 -keypass maple123 -dname "CN=Maple"
             echo "::notice::minted a new maple-release.jks — download it from artifacts and commit it so future builds keep the same signature"
           else
             echo "using committed maple-release.jks"
@@ -172,7 +172,7 @@ jobs:
           ALIGNED="maple-arm64-aligned.apk"
           "$BT/zipalign" -f 4 "$UNSIGNED" "$ALIGNED"
           "$BT/apksigner" sign --ks maple-release.jks --ks-key-alias maple \
-            --ks-pass pass:maple --key-pass pass:maple --out maple-mobile.apk "$ALIGNED"
+            --ks-pass pass:maple123 --key-pass pass:maple123 --out maple-mobile.apk "$ALIGNED"
           "$BT/apksigner" verify maple-mobile.apk
           ls -la maple-mobile.apk
 
