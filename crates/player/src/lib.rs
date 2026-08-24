@@ -91,6 +91,14 @@ impl Player {
         mpv.set_property("cache", "yes")?;
         mpv.set_property("cache-on-disk", "yes")?;
         mpv.set_property("demuxer-cache-dir", cache_dir)?;
+        // On-device only: mpv logs to stderr, which Android pipes into logcat under
+        // RustStdoutStderr. Verbose is the only way to see WHY mpv rejects a stream that the
+        // orchestrator just HEAD-validated (the Android playback failure showed as a generic
+        // LoadingFailed). Desktop keeps default levels — its failures are reproducible locally.
+        #[cfg(target_os = "android")]
+        {
+            let _ = mpv.set_property("msg-level", "all=v");
+        }
         let mpv = Arc::new(mpv);
 
         let (tx, rx) = unbounded_channel();
