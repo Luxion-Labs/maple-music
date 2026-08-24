@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: android-apk-${{ github.ref }}
@@ -135,6 +135,12 @@ jobs:
           # opens, before any Rust or UI code runs. That bug produced exactly that report.
           unzip -j -o /tmp/mpv-android.apk "lib/arm64-v8a/*.so" -d "$JNI_DIR"
 
+          # cacert.pem rides along from the same APK: ffmpeg's TLS layer on Android has no system
+          # cert store to verify against, so https streams fail unless tls-ca-file points at a
+          # bundle. The player crate include_bytes!s this file at crates/player/cacert.pem.
+          unzip -j -o /tmp/mpv-android.apk "assets/cacert.pem" -d crates/player/
+          test -f crates/player/cacert.pem || { echo "::error::cacert.pem missing — Android https playback will fail"; exit 1; }
+
           # Second copy into the NDK sysroot's triple lib dir: the linker searches there for
           # `-lmpv`, and this survives the CLI's RUSTFLAGS injection (see note above).
           SYSROOT_LIB="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24"
@@ -181,7 +187,21 @@ jobs:
           "$BT/apksigner" verify maple-mobile.apk
           ls -la maple-mobile.apk
 
-      # Artifacts are not release assets — nothing user-facing ships from this job yet.
+      # Artifacts expire after 14 days; the release doesn't. Every main push keeps a release
+      # tagged after the app version current with a fresh APK, so "latest" on GitHub always
+      # has an installable build. windows-release.yml attaches installers to the same tag.
+      - name: Attach the APK to its GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c "import json; print(json.load(open('src-tauri/tauri.conf.json'))['version'])")"
+          TAG="v$VERSION"
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "Automated build of $TAG — Android APK attached; desktop installers arrive via the release workflow."
+          gh release upload "$TAG" maple-mobile.apk --clobber
+
       - name: Upload the APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
