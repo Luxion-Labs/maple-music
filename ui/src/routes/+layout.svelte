@@ -7,7 +7,7 @@
 		CheckmarkCircle02Icon,
 		AlertCircleIcon,
 		InformationCircleIcon,
-		Menu01Icon
+		Settings01Icon
 	} from '@hugeicons/core-free-icons';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
@@ -22,6 +22,7 @@
 	import PlayerBar from '$lib/components/PlayerBar.svelte';
 	import QueuePanel from '$lib/components/QueuePanel.svelte';
 	import LyricsPanel from '$lib/components/LyricsPanel.svelte';
+	import BottomNav from '$lib/components/BottomNav.svelte';
 	import AddToPlaylist from '$lib/components/AddToPlaylist.svelte';
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 	import ShareDialog from '$lib/components/ShareDialog.svelte';
@@ -31,7 +32,7 @@
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import { Button } from '$lib/components/ui/button';
 		import { auth, initApp, inTauri, np, playback, ui } from '$lib/player.svelte';
-	import { closeDrawer, drawer, isMobile } from '$lib/mobile.svelte';
+	import { isMobile } from '$lib/mobile.svelte';
 	import { win, initWin } from '$lib/win.svelte';
 	import { initZoom } from '$lib/zoom';
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
@@ -110,32 +111,24 @@
 			<ResizeBorders />
 			<Titlebar />
 		{:else if isMobile}
-			<!-- Mobile top bar: the drawer's handle + brand. Slim on purpose — the PlayerBar and page
-			     headers already own most of the vertical budget on a phone. -->
-			<div class="flex h-12 shrink-0 items-center gap-1 border-b bg-sidebar px-2 text-sidebar-foreground">
+			<!-- Mobile top bar: brand + settings. Navigation itself is the BottomNav tab bar
+			     (Spotify's split); the drawer pattern is gone — primary destinations shouldn't hide. -->
+			<div class="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-3 text-sidebar-foreground">
+				<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
 				<Button
 					variant="ghost"
 					size="icon"
 					class="size-10"
-					onclick={() => (drawer.open = true)}
-					aria-label="Open menu"
+					onclick={() => (ui.settingsOpen = true)}
+					aria-label="Settings"
 				>
-					<HugeiconsIcon icon={Menu01Icon} strokeWidth={2} class="h-5 w-5" />
+					<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-5 w-5" />
 				</Button>
-				<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
 			</div>
-		{/if}
-		<!-- Drawer backdrop: taps outside close it. Above content (z-30 panels, z-40 drawer). -->
-		{#if isMobile && drawer.open}
-			<button
-				class="fixed inset-0 z-30 bg-black/50 backdrop-blur-[1px]"
-				onclick={closeDrawer}
-				aria-label="Close menu"
-			></button>
 		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
 		<div class="relative flex min-h-0 flex-1">
-			<Sidebar />
+			{#if !isMobile}<Sidebar />{/if}
 			<!-- dragScroll: dragging a card up to home's Shortcuts grid has to be possible from anywhere in
 			     the feed, so aiming at the top edge scrolls this container while the drag is in flight. -->
 			<main class="min-w-0 flex-1 overflow-y-auto" {@attach dragScroll}>
@@ -152,10 +145,11 @@
 		{#if playback.now}
 			<!-- Slides up from its own height on first play; leaves instantly (bar removal is rare).
 			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
-			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
-			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
+			     so a z on the footer inside would be trapped under it. On mobile this renders as the
+			     compact mini-player (see PlayerBar); safe-area padding lives on BottomNav, which is
+			     always the last row on a phone. -->
 			<div
-				class="relative z-20 {isMobile ? 'pb-[env(safe-area-inset-bottom)]' : ''}"
+				class="relative z-20"
 				in:fly={{ y: 64, duration: 250, easing: cubicOut }}
 			>
 				<PlayerBar
@@ -165,6 +159,9 @@
 					lyricsOpen={tabbed ? np.tab === 'lyrics' : lyricsOpen}
 				/>
 			</div>
+		{/if}
+		{#if isMobile}
+			<BottomNav />
 		{/if}
 	</div>
 

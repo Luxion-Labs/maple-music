@@ -33,7 +33,6 @@
 		toast
 	} from '$lib/player.svelte';
 	import { mergeSaved, orderLibrary } from '$lib/personal';
-	import { closeDrawer, drawer, isMobile } from '$lib/mobile.svelte';
 
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home01Icon },
@@ -95,30 +94,15 @@
 	// style is an `lg:` class, so collapsing is just not emitting them. The flag lives in `ui`
 	// because the overlays that offset by the sidebar's width read it too.
 	//
-	// On mobile the sidebar is a slide-in drawer that is always expanded (labels + playlists —
-	// there is no rail to collapse to). `wide()` strips the `lg:` prefix there, so every
-	// desktop-expanded class applies as-is; the paired base `hidden`s are neutralized at their
-	// use sites with `{isMobile ? '' : 'hidden'}`.
-	const collapsed = $derived(ui.sidebarCollapsed && !isMobile);
-	const wide = (cls: string) =>
-		isMobile ? cls.replaceAll('lg:', '') : collapsed ? '' : cls;
+	// Mobile doesn't render this component at all (see +layout): primary navigation on a phone is
+	// the BottomNav tab bar — Spotify's split of chrome by window size.
+	const collapsed = $derived(ui.sidebarCollapsed);
+	const wide = (cls: string) => (collapsed ? '' : cls);
 </script>
 
-<aside
-	class="{isMobile
-		? 'fixed inset-y-0 left-0 z-40 w-72 shadow-2xl transition-transform duration-200 ease-out'
-		: 'flex h-full w-16 shrink-0'} flex-col border-r bg-sidebar p-3 text-sidebar-foreground {isMobile
-		? ''
-		: wide('lg:w-60')} {isMobile
-		? drawer.open
-			? 'translate-x-0'
-			: '-translate-x-full'
-		: ''}"
->
+<aside class="flex h-full w-16 shrink-0 flex-col border-r bg-sidebar p-3 text-sidebar-foreground {wide('lg:w-60')}">
 	<div class="flex items-center justify-center px-2 py-2 {wide('lg:justify-between')}">
-		<span class="{isMobile ? '' : 'hidden'} font-heading text-lg font-bold tracking-tight {wide(
-			'lg:block'
-		)}">Maple</span>
+		<span class="hidden font-heading text-lg font-bold tracking-tight {wide('lg:block')}">Maple</span>
 		<!-- Column when collapsed: the two buttons don't fit side by side in the 64px rail. -->
 		<div class="flex items-center gap-1 {collapsed ? 'flex-col' : ''}">
 			<Button
@@ -154,7 +138,6 @@
 		{#each nav as n (n.href)}
 			<a
 				href={n.href}
-				onclick={closeDrawer}
 				title={n.label}
 				class="group relative flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors {wide(
 					'lg:justify-start'
@@ -172,7 +155,7 @@
 					icon={n.icon}
 					class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
 				/>
-				<span class="{isMobile ? '' : 'hidden'} {wide('lg:inline')}">{n.label}</span>
+				<span class="hidden {wide('lg:inline')}">{n.label}</span>
 			</a>
 		{/each}
 		<button
@@ -186,7 +169,7 @@
 				icon={Settings01Icon}
 				class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
 			/>
-			<span class="{isMobile ? '' : 'hidden'} {wide('lg:inline')}">Settings</span>
+			<span class="hidden {wide('lg:inline')}">Settings</span>
 		</button>
 	</nav>
 
@@ -194,7 +177,7 @@
 	     the list fill the space and scroll. Signed out the section still appears once there is
 	     something in it: On Repeat, or a playlist saved on this machine. -->
 	{#if auth.account?.signedIn || playlists.length}
-		<div class="mt-3 {isMobile ? 'flex' : 'hidden'} min-h-0 flex-1 flex-col border-t pt-3 {wide('lg:flex')}">
+		<div class="mt-3 hidden min-h-0 flex-1 flex-col border-t pt-3 {wide('lg:flex')}">
 			<!-- Creating one is a YouTube write action, so it needs an account. -->
 			{#if auth.account?.signedIn}
 				<Button
@@ -213,8 +196,7 @@
 					<div class="group/row relative">
 						<a
 							href={playlistHref(pl)}
-							onclick={closeDrawer}
-							title={pl.title}
+										title={pl.title}
 							class="flex items-center gap-2.5 rounded-lg py-1.5 pl-2 pr-9 transition-colors hover:bg-sidebar-accent/50"
 						>
 							<div
