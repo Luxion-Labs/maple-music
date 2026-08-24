@@ -182,12 +182,10 @@ jobs:
           ls -la maple-mobile.apk
 
       # Artifacts are not release assets — nothing user-facing ships from this job yet.
-      - name: Upload the APK + keystore
+      - name: Upload the APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: maple-android-release-arm64
-          path: |
-            maple-mobile.apk
-            maple-release.jks
+          path: maple-mobile.apk
           if-no-files-found: error
           retention-days: 14
