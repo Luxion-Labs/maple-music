@@ -32,7 +32,7 @@
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import { Button } from '$lib/components/ui/button';
 		import { auth, initApp, inTauri, np, playback, ui } from '$lib/player.svelte';
-	import { isMobile } from '$lib/mobile.svelte';
+	import { isMobile, isTouchDevice } from '$lib/mobile.svelte';
 	import { win, initWin } from '$lib/win.svelte';
 	import { initZoom } from '$lib/zoom';
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
@@ -61,8 +61,10 @@
 	// plain browser — that was the white screen, caught by the boot-error trap in app.html.
 	const isMini = inTauri && getCurrentWindow().label === 'mini';
 
-	// Plain-browser `vite dev`: render the shell with empty data, skip everything desktop.
-	const chromeless = !inTauri || isMobile;
+	// Plain-browser `vite dev` or any touch platform: no window chrome to manage. Width is
+	// deliberately not part of this — a narrow desktop window still has a titlebar and an
+	// updater; it only changes layout (see isMobile).
+	const chromeless = !inTauri || isTouchDevice;
 
 	// Apply the saved accent color before the first paint (ssr=false → nothing renders until now).
 	if (browser) initTheme();
@@ -110,7 +112,7 @@
 		{#if !chromeless}
 			<ResizeBorders />
 			<Titlebar />
-		{:else if isMobile}
+		{:else if isMobile()}
 			<!-- Mobile top bar: brand + settings. Navigation itself is the BottomNav tab bar
 			     (Spotify's split); the drawer pattern is gone — primary destinations shouldn't hide. -->
 			<div class="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-3 text-sidebar-foreground">
@@ -128,7 +130,7 @@
 		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
 		<div class="relative flex min-h-0 flex-1">
-			{#if !isMobile}<Sidebar />{/if}
+			{#if !isMobile()}<Sidebar />{/if}
 			<!-- dragScroll: dragging a card up to home's Shortcuts grid has to be possible from anywhere in
 			     the feed, so aiming at the top edge scrolls this container while the drag is in flight. -->
 			<main class="min-w-0 flex-1 overflow-y-auto" {@attach dragScroll}>
@@ -160,7 +162,7 @@
 				/>
 			</div>
 		{/if}
-		{#if isMobile}
+		{#if isMobile()}
 			<BottomNav />
 		{/if}
 	</div>

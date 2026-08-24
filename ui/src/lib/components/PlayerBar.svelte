@@ -38,7 +38,7 @@
 	import ArtistLine from './ArtistLine.svelte';
 	import Marquee from './Marquee.svelte';
 	import TrackMenu from './TrackMenu.svelte';
-	import { isMobile } from '$lib/mobile.svelte';
+	import { isMobile, isTouchDevice } from '$lib/mobile.svelte';
 
 	let {
 		onToggleQueue,
@@ -125,7 +125,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions, a11y_no_noninteractive_element_interactions -->
-{#if isMobile}
+{#if isMobile()}
 	<!-- Phone mini-player, Spotify-style: a slim strip above the tab bar — art, title, play/pause,
 	     next. A hairline progress bar runs along its top edge (the seek slider lives in the
 	     full-screen view). Tapping anywhere that isn't a control opens that view (shared handler). -->
@@ -381,9 +381,13 @@
 		</div>
 		<!-- One cluster, so they sit tighter to each other than to the volume slider. -->
 		<div class="flex items-center gap-0.5">
-			<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
-				<HugeiconsIcon icon={MinimizeScreenIcon} class="h-5 w-5" />
-			</Button>
+			<!-- The floating mini-player widget is a desktop-OS window; the command doesn't exist on
+			     Android, so a wide tablet must not offer it. -->
+			{#if !isTouchDevice}
+				<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
+					<HugeiconsIcon icon={MinimizeScreenIcon} class="h-5 w-5" />
+				</Button>
+			{/if}
 			<Button
 				variant={lyricsOpen ? 'secondary' : 'ghost'}
 				size="icon-sm"

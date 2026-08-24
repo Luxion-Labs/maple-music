@@ -108,7 +108,7 @@
 	}
 </script>
 
-{#if isMobile}
+{#if isMobile()}
 	<!-- Phone: the full-screen view Spotify-style. Covers everything including the mini-player
 	     and tab bar (fixed, z-40), so it carries its own transport row and a collapsible
 	     queue/lyrics sheet — on desktop those live in the bar/columns below, which are hidden
