@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Pinned mpv-android release. Only lib/arm64-v8a/libmpv.so is used from inside it.
+  # Pinned mpv-android release. Every lib/arm64-v8a/*.so inside it ships in our APK.
   MPV_ANDROID_APK_URL: https://github.com/mpv-android/mpv-android/releases/download/2026-08-11/app-default-arm64-v8a-release.apk
   JNI_DIR: src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
 
