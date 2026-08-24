@@ -7,7 +7,8 @@
 		CheckmarkCircle02Icon,
 		AlertCircleIcon,
 		InformationCircleIcon,
-		Settings01Icon
+		Settings01Icon,
+		Menu01Icon
 	} from '@hugeicons/core-free-icons';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
@@ -18,6 +19,7 @@
 	import { dragScroll } from '$lib/dnd';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import AccountMenu from '$lib/components/AccountMenu.svelte';
+	import MobileDrawer from '$lib/components/MobileDrawer.svelte';
 	import Titlebar from '$lib/components/Titlebar.svelte';
 	import ResizeBorders from '$lib/components/ResizeBorders.svelte';
 	import PlayerBar from '$lib/components/PlayerBar.svelte';
@@ -39,6 +41,8 @@
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
 
 	let { children } = $props();
+	// Mobile hamburger drawer (playlists/settings depth behind the tab bar).
+	let drawerOpen = $state(false);
 	// Queue and lyrics toggle independently and both float over the page rather than docking into
 	// it — two docked columns squeezed the content down to an unusable strip. At lg+ they sit side
 	// by side over the content; narrower, they stack (see QueuePanel / LyricsPanel).
@@ -114,10 +118,22 @@
 			<ResizeBorders />
 			<Titlebar />
 		{:else if isMobile()}
-			<!-- Mobile top bar: brand + account (sign in / profile) + settings — navigation itself is
-			     the BottomNav tab bar (Spotify's split); the drawer pattern is gone. -->
+			<!-- Mobile top bar: hamburger (drawer) + brand + account + settings — primary navigation is
+			     the BottomNav tab bar; the drawer carries the depth (playlists, settings), YT Music's
+			     split. -->
 			<div class="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-3 text-sidebar-foreground">
-				<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
+				<div class="flex items-center">
+					<Button
+						variant="ghost"
+						size="icon"
+						class="size-10"
+						onclick={() => (drawerOpen = true)}
+						aria-label="Open menu"
+					>
+						<HugeiconsIcon icon={Menu01Icon} strokeWidth={2} class="h-5 w-5" />
+					</Button>
+					<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
+				</div>
 				<div class="flex items-center">
 					<AccountMenu />
 					<Button
@@ -167,6 +183,7 @@
 			</div>
 		{/if}
 		{#if isMobile()}
+			<MobileDrawer open={drawerOpen} onClose={() => (drawerOpen = false)} />
 			<BottomNav />
 		{/if}
 	</div>
