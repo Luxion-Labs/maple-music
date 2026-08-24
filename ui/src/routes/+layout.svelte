@@ -55,13 +55,23 @@
 	// routes below it are ever rendered. Constant for the window's lifetime.
 	const isMini = browser && getCurrentWindow().label === 'mini';
 
+	// Phones/tablets: no window controls to draw, no resize borders, no desktop-only boot. Detected
+	// off the UA because Tauri's platform cfg lives in Rust, not here.
+	const isMobile = browser && /Android|iPhone|iPad/i.test(navigator.userAgent);
+
 	// Apply the saved accent color before the first paint (ssr=false → nothing renders until now).
 	if (browser) initTheme();
 
 	// Wire the Tauri event bridge once for the whole app; teardown on destroy. Check for an update
 	// on every app open (silent unless one exists).
 	onMount(() => {
+		// The boot-error trap in app.html has done its job once the SPA mounted cleanly.
+		(window as any).__mapleClearBootErrors?.();
 		if (isMini) return initApp(true);
+		if (isMobile) {
+			// No desktop window chrome to drive and no self-updater on Android — skip all three.
+			return initApp();
+		}
 		// First: it reveals the window (see initWin).
 		const teardownWin = initWin();
 		checkForUpdatesQuiet();
@@ -86,12 +96,14 @@
 	<!-- The window itself is transparent; this root paints the background and, when not maximized,
 	     rounds the corners (the compositor can't round an undecorated window for us). -->
 	<div
-		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized
+		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized && !isMobile
 			? ''
 			: 'rounded-lg'}"
 	>
-		<ResizeBorders />
-		<Titlebar />
+		{#if !isMobile}
+			<ResizeBorders />
+			<Titlebar />
+		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
 		<div class="relative flex min-h-0 flex-1">
 			<Sidebar />

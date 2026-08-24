@@ -8,5 +8,37 @@
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+		<script>
+			// Boot-error trap. Runs before any bundle: if the SPA dies during module evaluation or
+			// mount, the user sees the reason instead of a silent white screen (that is exactly how
+			// the first Android build failed, with nothing to go on). Removed once Svelte mounts.
+			window.__mapleErrors = [];
+			var show = function (msg) {
+				try {
+					window.__mapleErrors.push(String(msg));
+					var el = document.getElementById('maple-boot-errors') || null;
+					if (!el) {
+						el = document.createElement('pre');
+						el.id = 'maple-boot-errors';
+						el.style.cssText =
+							'position:fixed;inset:auto 8px 8px 8px;z-index:99999;margin:0;padding:10px;' +
+							'max-height:40vh;overflow:auto;background:#1b1b1f;color:#ff6b6b;font:12px/1.5 monospace;' +
+							'white-space:pre-wrap;border-radius:8px;border:1px solid #ff6b6b';
+						document.body.appendChild(el);
+					}
+					el.textContent = window.__mapleErrors.join('\n---\n');
+				} catch (_) {}
+			};
+			window.addEventListener('error', function (e) {
+				show((e.error && e.error.stack) || e.message || e.filename);
+			});
+			window.addEventListener('unhandledrejection', function (e) {
+				show('unhandled rejection: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason));
+			});
+			window.__mapleClearBootErrors = function () {
+				var el = document.getElementById('maple-boot-errors');
+				if (el) el.remove();
+			};
+		</script>
 	</body>
 </html>
