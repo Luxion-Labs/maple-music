@@ -109,11 +109,11 @@
 {#if ui.share}
 	<div
 		transition:fade={{ duration: 150 }}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+		class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
 	>
 		<div
 			transition:scale={{ duration: 180, start: 0.96, easing: cubicOut }}
-			class="w-full max-w-md rounded-xl border bg-card p-4 shadow-xl"
+			class="max-h-[85dvh] w-full overflow-y-auto rounded-t-xl border bg-card p-4 shadow-xl sm:max-w-md sm:rounded-xl"
 		>
 			<div class="mb-3 flex items-start justify-between gap-3">
 				<h2 class="font-heading text-base font-semibold">Share</h2>

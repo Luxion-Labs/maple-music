@@ -12,6 +12,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
 	import { inTauri, ui, toast } from '$lib/player.svelte';
+	import { isTouchDevice } from '$lib/mobile.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Changelog from '$lib/components/Changelog.svelte';
 	import {
@@ -254,21 +255,26 @@
 </script>
 
 <Dialog.Root bind:open={ui.settingsOpen}>
-	<Dialog.Content class="gap-0 overflow-hidden p-0 sm:max-w-3xl">
+	<!-- Phone: the dialog fills the screen edge-to-edge (a centered card is a desktop pattern);
+	     sm+ keeps the floating 3xl modal. h-dvh on Content + flex-1 pane below replaces the old
+	     fixed 32rem box, which fought both tall and short phones. -->
+	<Dialog.Content
+		class="flex h-dvh max-h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-w-3xl sm:rounded-lg sm:border"
+	>
 		<div class="flex items-center border-b px-6 py-4">
 			<Dialog.Title class="text-lg font-semibold">Settings</Dialog.Title>
 			<Dialog.Description class="sr-only">Application settings</Dialog.Description>
 		</div>
 
-		<!-- Phone: the rail becomes a horizontal tab strip and the whole sheet goes taller/narrower
-		     — the desktop two-pane doesn't fit 360dp. -->
-		<div class="flex h-[32rem] flex-col sm:h-[28rem] sm:flex-row">
+		<!-- Phone: the rail becomes a horizontal tab strip; sm+ gets the two-pane layout. -->
+		<div class="flex min-h-0 flex-1 flex-col sm:h-[28rem] sm:flex-row">
 			<!-- Tab rail -->
+			<!-- Tab rail — horizontal swipe strip on a phone (tabs never squash), rail on desktop. -->
 			<nav class="flex shrink-0 overflow-x-auto border-b p-2 sm:w-48 sm:flex-col sm:border-b-0 sm:border-r">
 				{#each TABS as t (t.id)}
 					<button
 						onclick={() => (tab = t.id)}
-						class="w-full whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors {tab ===
+						class="shrink-0 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-colors sm:w-full sm:px-3 sm:py-2 sm:text-left {tab ===
 						t.id
 							? 'bg-accent text-accent-foreground'
 							: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}"
@@ -293,37 +299,43 @@
 						</div>
 						<Switch checked={historyOn} onCheckedChange={setHistory} />
 					</div>
-					<div class="flex items-start justify-between gap-4 border-b py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Discord rich presence</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Show what you're listening to on your Discord profile. Needs the Discord desktop app
-								running — no login here.
-							</p>
+					<!-- Desktop-only OS integrations: there is no Discord app, tray or login session to
+					     hook on Android, so offering the switches would just be dead controls. -->
+					{#if !isTouchDevice}
+						<div class="flex items-start justify-between gap-4 border-b py-3">
+							<div class="min-w-0">
+								<div class="font-medium">Discord rich presence</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									Show what you're listening to on your Discord profile. Needs the Discord desktop app
+									running — no login here.
+								</p>
+							</div>
+							<Switch checked={discordOn} onCheckedChange={setDiscord} />
 						</div>
-						<Switch checked={discordOn} onCheckedChange={setDiscord} />
-					</div>
-					<div class="flex items-start justify-between gap-4 border-b py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Close to tray</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Closing the window keeps music playing in the background. Restore or quit from the
-								tray icon.
-							</p>
+						<div class="flex items-start justify-between gap-4 border-b py-3">
+							<div class="min-w-0">
+								<div class="font-medium">Close to tray</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									Closing the window keeps music playing in the background. Restore or quit from the
+									tray icon.
+								</p>
+							</div>
+							<Switch checked={trayOn} onCheckedChange={setTray} />
 						</div>
-						<Switch checked={trayOn} onCheckedChange={setTray} />
-					</div>
-					<div class="flex items-start justify-between gap-4 py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Start on login</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Launch Maple automatically when you log in.
-							</p>
+						<div class="flex items-start justify-between gap-4 py-3">
+							<div class="min-w-0">
+								<div class="font-medium">Start on login</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									Launch Maple automatically when you log in.
+								</p>
+							</div>
+							<Switch checked={autostartOn} onCheckedChange={setAutostart} />
 						</div>
-						<Switch checked={autostartOn} onCheckedChange={setAutostart} />
-					</div>
+					{/if}
 				{:else if tab === 'themes'}
-					<div class="flex items-center justify-between gap-8 border-b py-3">
+					<!-- Rows with a real control stack on a phone: side-by-side leaves ~120px of
+					     text next to a 176px Select, which wraps into unreadable slivers. -->
+					<div class="flex flex-col items-stretch gap-2 border-b py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
 						<div class="min-w-0">
 							<div class="font-medium">Preset</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
@@ -335,7 +347,7 @@
 							value={theme.id}
 							onValueChange={(v) => applyTheme(v as ThemeId)}
 						>
-							<Select.Trigger class="w-44 shrink-0" aria-label="Theme">
+							<Select.Trigger class="w-full shrink-0 sm:w-44" aria-label="Theme">
 								<span class="size-4 shrink-0 rounded-full ring-1 ring-black/10" style="background:{currentTheme.color}"></span>
 								<span class="flex-1 text-left">{currentTheme.label}</span>
 							</Select.Trigger>
@@ -389,7 +401,7 @@
 						{/if}
 					</div>
 
-					<div class="flex items-center justify-between gap-8 border-b py-3">
+					<div class="flex flex-col items-stretch gap-2 border-b py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
 						<div class="min-w-0">
 							<div class="font-medium">Background tint</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
@@ -408,18 +420,18 @@
 							disabled={currentTheme.kind === 'palette'}
 							value={effective.hue}
 							onValueChange={(hue) => setCustom({ hue })}
-							class="w-44 shrink-0 [&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-track]]:bg-[linear-gradient(to_right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)]"
+							class="w-full shrink-0 sm:w-44 [&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-track]]:bg-[linear-gradient(to_right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)]"
 						/>
 					</div>
 
-					<div class="flex items-center justify-between gap-8 border-b py-3">
+					<div class="flex flex-col items-stretch gap-2 border-b py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
 						<div class="min-w-0">
 							<div class="font-medium">Roundness</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
 								Corner radius of cards, buttons and artwork.
 							</p>
 						</div>
-						<div class="flex w-44 shrink-0 items-center gap-3">
+						<div class="flex w-full shrink-0 items-center gap-3 sm:w-44">
 							<Slider
 								type="single"
 								aria-label="Roundness"
@@ -435,8 +447,8 @@
 					</div>
 
 					{#each FONT_ROWS as row (row.key)}
-						<div class="border-b py-3">
-							<div class="flex items-center justify-between gap-8">
+					<div class="border-b py-3">
+						<div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
 								<div class="min-w-0">
 									<div class="font-medium">{row.label}</div>
 									<p class="mt-0.5 text-sm text-muted-foreground">{row.hint}</p>
@@ -446,7 +458,7 @@
 									value={isCustomFont[row.key] ? 'custom' : matchFont(effective[row.key])}
 									onValueChange={(v) => chooseFont(row.key, v)}
 								>
-									<Select.Trigger class="w-44 shrink-0" aria-label={row.label}>
+									<Select.Trigger class="w-full shrink-0 sm:w-44" aria-label={row.label}>
 										<span
 											class="min-w-0 flex-1 truncate text-left"
 											style="font-family:{effective[row.key]}"
@@ -498,45 +510,49 @@
 						</div>
 					{/each}
 
-					<div class="border-b py-3">
-						<div class="flex items-center justify-between gap-8">
-							<div class="min-w-0">
-								<div class="font-medium">Font files</div>
-								<p class="mt-0.5 text-sm text-muted-foreground">
-									Load a .ttf, .otf or .woff from anywhere on this computer. It joins both dropdowns
-									above.
-								</p>
+						<!-- Font FILES need the desktop file-picker plugin; family presets above are pure CSS
+					     and work everywhere. -->
+					{#if !isTouchDevice}
+						<div class="border-b py-3">
+							<div class="flex items-center justify-between gap-8">
+								<div class="min-w-0">
+									<div class="font-medium">Font files</div>
+									<p class="mt-0.5 text-sm text-muted-foreground">
+										Load a .ttf, .otf or .woff from anywhere on this computer. It joins both dropdowns
+										above.
+									</p>
+								</div>
+								<Button variant="outline" size="sm" class="shrink-0" onclick={pickFontFiles}>
+									Add font…
+								</Button>
 							</div>
-							<Button variant="outline" size="sm" class="shrink-0" onclick={pickFontFiles}>
-								Add font…
-							</Button>
+							{#if custom.fontFiles.length}
+								<div class="mt-3 flex flex-col gap-1.5">
+									{#each custom.fontFiles as path (path)}
+										<div class="flex items-center gap-3 rounded-md bg-secondary/50 py-1.5 pr-1.5 pl-3">
+											<!-- The name is the identity; the path only earns a tooltip. A font called
+											     BigBlueTerm437NerdFontMono-Regular is wider than the modal. -->
+											<span
+												class="min-w-0 flex-1 truncate"
+												style="font-family:'{fileFamily(path)}'"
+												title={path}
+											>
+												{fileFamily(path)}
+											</span>
+											<button
+												type="button"
+												onclick={() => removeFontFile(path)}
+												aria-label="Remove {fileFamily(path)}"
+												class="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+											>
+												<HugeiconsIcon icon={Cancel01Icon} size={14} />
+											</button>
+										</div>
+									{/each}
+								</div>
+							{/if}
 						</div>
-						{#if custom.fontFiles.length}
-							<div class="mt-3 flex flex-col gap-1.5">
-								{#each custom.fontFiles as path (path)}
-									<div class="flex items-center gap-3 rounded-md bg-secondary/50 py-1.5 pr-1.5 pl-3">
-										<!-- The name is the identity; the path only earns a tooltip. A font called
-										     BigBlueTerm437NerdFontMono-Regular is wider than the modal. -->
-										<span
-											class="min-w-0 flex-1 truncate"
-											style="font-family:'{fileFamily(path)}'"
-											title={path}
-										>
-											{fileFamily(path)}
-										</span>
-										<button
-											type="button"
-											onclick={() => removeFontFile(path)}
-											aria-label="Remove {fileFamily(path)}"
-											class="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-										>
-											<HugeiconsIcon icon={Cancel01Icon} size={14} />
-										</button>
-									</div>
-								{/each}
-							</div>
-						{/if}
-					</div>
+					{/if}
 
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
@@ -707,52 +723,55 @@
 					<div class="border-b py-3">
 						<div class="font-heading text-lg font-bold">Maple</div>
 						<p class="mt-1 text-sm text-muted-foreground">
-							A cross-platform desktop YouTube Music client — ad-free playback straight from
-							YouTube's private API, with your real library and OS media keys.
+							A cross-platform YouTube Music client — ad-free playback straight from YouTube's
+							private API, with your real library.
 						</p>
 						{#if version}<p class="mt-2 text-sm text-muted-foreground">Version {version}</p>{/if}
 					</div>
-					<div class="flex items-center justify-between gap-4 border-b py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Updates</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								{#if updateState.available}
-									Version {updateState.available.version} is available.
-								{:else}
-									Check GitHub for a newer release.
-								{/if}
-							</p>
+					{#if !isTouchDevice}
+						<!-- The auto-updater is a desktop plugin; phones update through their APK source. -->
+						<div class="flex items-center justify-between gap-4 border-b py-3">
+							<div class="min-w-0">
+								<div class="font-medium">Updates</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									{#if updateState.available}
+										Version {updateState.available.version} is available.
+									{:else}
+										Check GitHub for a newer release.
+									{/if}
+								</p>
+							</div>
+							{#if updateState.available}
+								<Button size="sm" onclick={installUpdate} disabled={updateState.installing}>
+									{updateState.installing ? 'Updating…' : 'Update now'}
+								</Button>
+							{:else}
+								<Button
+									variant="outline"
+									size="sm"
+									onclick={checkUpdates}
+									disabled={updateState.checking}
+								>
+									{updateState.checking ? 'Checking…' : 'Check for updates'}
+								</Button>
+							{/if}
 						</div>
-						{#if updateState.available}
-							<Button size="sm" onclick={installUpdate} disabled={updateState.installing}>
-								{updateState.installing ? 'Updating…' : 'Update now'}
-							</Button>
-						{:else}
-							<Button
-								variant="outline"
-								size="sm"
-								onclick={checkUpdates}
-								disabled={updateState.checking}
-							>
-								{updateState.checking ? 'Checking…' : 'Check for updates'}
-							</Button>
+						{#if updateResult && !updateState.available}
+							<Alert variant={updateResult.error ? 'destructive' : 'default'}>
+								<AlertDescription>{updateResult.message}</AlertDescription>
+							</Alert>
 						{/if}
-					</div>
-					{#if updateResult && !updateState.available}
-						<Alert variant={updateResult.error ? 'destructive' : 'default'}>
-							<AlertDescription>{updateResult.message}</AlertDescription>
-						</Alert>
-					{/if}
-					<div class="flex items-start justify-between gap-4 py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Tell me about new versions</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Check on launch and show a banner when a newer version is out. Off means no check
-								and no banner, so use the button above to look.
-							</p>
+						<div class="flex items-start justify-between gap-4 border-b py-3">
+							<div class="min-w-0">
+								<div class="font-medium">Tell me about new versions</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									Check on launch and show a banner when a newer version is out. Off means no check
+									and no banner, so use the button above to look.
+								</p>
+							</div>
+							<Switch checked={updateBannerOn} onCheckedChange={setUpdateBanner} />
 						</div>
-						<Switch checked={updateBannerOn} onCheckedChange={setUpdateBanner} />
-					</div>
+					{/if}
 					<div class="border-t py-3">
 						<div class="font-medium">What's new</div>
 						<p class="mt-0.5 mb-1 text-sm text-muted-foreground">
