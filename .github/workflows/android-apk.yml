@@ -1,15 +1,19 @@
 name: Android APK
 
-# Builds an installable arm64 debug APK of Maple for Android.
+# Builds a SIGNED RELEASE arm64 APK of Maple for Android.
 #
-# Every push to main gets a fresh APK (Actions ▸ latest run ▸ maple-android-debug-arm64).
+# Every push to main gets a fresh installable APK (Actions ▸ latest run ▸ artifacts).
 # workflow_dispatch stays for rebuilds/backfills with no code change.
 #
-# WHY DEBUG: a signed release APK needs a signing key that stays identical between runs or
-# updates can't install over an earlier build. We have no committed keystore yet, and a keystore
-# minted per-run would change every time — which is exactly what the debug variant does anyway,
-# with zero extra plumbing. So: debug now (uninstall/reinstall between runs), committed keystore
-# later if Android releases become real.
+# SIGNING: release APKs must be signed to install. If `maple-release.jks` isn't committed yet,
+# this job mints one, signs with it, and uploads it as an artifact — download it once and commit
+# it to the repo root, and every later build shares the same signature, so new APKs install over
+# old ones. Until then, uninstall the previous build before installing (per-run key).
+# The keystore/password being public is deliberate: this is a free client anyone builds from
+# source; there is nothing here to protect. Rotate privately before ever shipping to Play.
+#
+# SIZE: release applies the workspace's [profile.release] (thin LTO, stripped symbols), which is
+# why this is ~10× smaller than the debug APK this job used to produce (268 MB → ~30 MB).
 #
 # THE THREE NATIVE PIECES this job has to assemble that the desktop jobs get for free:
 #   1. libmpv.so (arm64) — extracted from the official mpv-android release APK into jniLibs (for
@@ -135,19 +139,50 @@ jobs:
           ls -la "$JNI_DIR" "$SYSROOT_LIB/libmpv.so"
           test -f "$JNI_DIR/libmpv.so" || { echo "::error::libmpv.so missing from mpv-android APK"; exit 1; }
 
-      - name: Build the debug APK (arm64)
+      - name: Build the unsigned release APK (arm64)
         shell: bash
         # beforeBuildCommand emptied: we just ran `pnpm build` ourselves. Left on, tauri runs
         # `pnpm build` from the repo root, which has no package.json (see windows-release.yml).
         run: >
-          cargo tauri android build --apk --debug --target aarch64
+          cargo tauri android build --apk --target aarch64
           --config '{"build":{"beforeBuildCommand":""}}'
 
+      # Mint the signing key only when it isn't committed yet; afterwards this is a no-op and
+      # every run signs with the same key. Password/dname are public by design — see header.
+      - name: Signing key (generate if absent)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f maple-release.jks ]; then
+            keytool -genkeypair -keystore maple-release.jks -alias maple \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass maple -keypass maple -dname "CN=Maple"
+            echo "::notice::minted a new maple-release.jks — download it from artifacts and commit it so future builds keep the same signature"
+          else
+            echo "using committed maple-release.jks"
+          fi
+
+      - name: Align + sign the APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          UNSIGNED="$(find src-tauri/gen/android/app/build/outputs/apk -name '*-unsigned.apk' | head -1)"
+          [ -n "$UNSIGNED" ] || { echo "::error::no *-unsigned.apk produced"; exit 1; }
+          ALIGNED="maple-arm64-aligned.apk"
+          "$BT/zipalign" -f 4 "$UNSIGNED" "$ALIGNED"
+          "$BT/apksigner" sign --ks maple-release.jks --ks-key-alias maple \
+            --ks-pass pass:maple --key-pass pass:maple --out maple-mobile.apk "$ALIGNED"
+          "$BT/apksigner" verify maple-mobile.apk
+          ls -la maple-mobile.apk
+
       # Artifacts are not release assets — nothing user-facing ships from this job yet.
-      - name: Upload the APK
+      - name: Upload the APK + keystore
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: maple-android-debug-arm64
-          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          name: maple-android-release-arm64
+          path: |
+            maple-mobile.apk
+            maple-release.jks
           if-no-files-found: error
           retention-days: 14
