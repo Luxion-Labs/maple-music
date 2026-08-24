@@ -13,20 +13,44 @@
 			// mount, the user sees the reason instead of a silent white screen (that is exactly how
 			// the first Android build failed, with nothing to go on). Removed once Svelte mounts.
 			window.__mapleErrors = [];
+			var el = null;
 			var show = function (msg) {
 				try {
 					window.__mapleErrors.push(String(msg));
-					var el = document.getElementById('maple-boot-errors') || null;
+					el = document.getElementById('maple-boot-errors') || null;
 					if (!el) {
-						el = document.createElement('pre');
-						el.id = 'maple-boot-errors';
-						el.style.cssText =
-							'position:fixed;inset:auto 8px 8px 8px;z-index:99999;margin:0;padding:10px;' +
-							'max-height:40vh;overflow:auto;background:#1b1b1f;color:#ff6b6b;font:12px/1.5 monospace;' +
-							'white-space:pre-wrap;border-radius:8px;border:1px solid #ff6b6b';
-						document.body.appendChild(el);
+						var wrap = document.createElement('div');
+						wrap.id = 'maple-boot-errors';
+						wrap.style.cssText =
+							'position:fixed;inset:auto 8px 8px 8px;z-index:99999;display:flex;' +
+							'flex-direction:column;border-radius:8px;overflow:hidden;' +
+							'border:1px solid #ff6b6b';
+						var bar = document.createElement('div');
+						bar.style.cssText =
+							'display:flex;align-items:center;justify-content:space-between;' +
+							'background:#2a1215;color:#ffb4b4;padding:6px 10px;font:12px monospace';
+						bar.appendChild(document.createTextNode('Maple — startup errors'));
+						var x = document.createElement('button');
+						x.textContent = '\u00d7';
+						x.setAttribute('aria-label', 'Dismiss error banner');
+						x.style.cssText =
+							'cursor:pointer;background:none;border:none;color:#ffb4b4;font:16px monospace;padding:0 4px';
+						x.onclick = function () {
+							// Dismiss only hides it; a new error re-opens the banner.
+							if (el && el.parentNode) el.parentNode.removeChild(el);
+							el = null;
+						};
+						bar.appendChild(x);
+						var pre = document.createElement('pre');
+						pre.style.cssText =
+							'margin:0;padding:10px;max-height:40vh;overflow:auto;background:#1b1b1f;' +
+							'color:#ff6b6b;font:12px/1.5 monospace;white-space:pre-wrap';
+						wrap.appendChild(bar);
+						wrap.appendChild(pre);
+						document.body.appendChild(wrap);
+						el = wrap;
 					}
-					el.textContent = window.__mapleErrors.join('\n---\n');
+					el.querySelector('pre').textContent = window.__mapleErrors.join('\n---\n');
 				} catch (_) {}
 			};
 			window.addEventListener('error', function (e) {

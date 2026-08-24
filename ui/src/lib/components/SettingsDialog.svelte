@@ -11,7 +11,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
-	import { ui, toast } from '$lib/player.svelte';
+	import { inTauri, ui, toast } from '$lib/player.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Changelog from '$lib/components/Changelog.svelte';
 	import {
@@ -104,7 +104,8 @@
 	let loaded = $state(false);
 	let clearing = $state(false);
 	let version = $state('');
-	getVersion().then((v) => (version = v));
+	// Tauri-only: getVersion() reads injected internals and rejects outside the app (browser dev).
+	if (inTauri) getVersion().then((v) => (version = v));
 	// Result of the last "Check for updates" click — shown inline (a toast renders behind the modal).
 	let updateResult = $state<{ message: string; error: boolean } | null>(null);
 
