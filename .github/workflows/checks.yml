@@ -1,19 +1,20 @@
 name: Checks
 
-# Formatting only, on purpose.
+# Two jobs:
 #
-# WHY THIS EXISTS: PR #13 ran `cargo fmt` against a repo that had no `rustfmt.toml`, so rustfmt's
-# defaults reformatted 21 files the change never touched and buried ~900 lines of real work inside a
-# 2400-line diff. The convention was written down only in a gitignored CLAUDE.md, so the contributor
-# had no way to know. `rustfmt.toml` is committed now and the tree was normalised to it, which means
-# the drift is detectable mechanically instead of during review.
+# 1. `rustfmt` — formatting only, seconds, on every push/PR.
 #
-# WHY NOT ALSO BUILD AND TEST HERE: `maple-app` links libmpv and webkit2gtk, so testing it needs
-# the full Tauri system-dependency install and a cold Rust compile. This job needs neither: rustfmt
-# parses the source and never builds it, so it finishes in seconds on a bare runner and stays cheap
-# enough to run on every push. If you do want tests in CI later, add a separate job rather than
-# weighing this one down, and note that `cargo test -p innertube -p player` covers the pure-Rust
-# crates without any of that system setup.
+# WHY FMT STAYS SEPARATE AND CHEAP: PR #13 ran `cargo fmt` against a repo that had no
+# `rustfmt.toml`, so rustfmt's defaults reformatted 21 files the change never touched and buried
+# ~900 lines of real work inside a 2400-line diff. rustfmt parses without building, so this job
+# stays cheap enough to run on every push.
+#
+# 2. `tests` — the compiler. fmt can't catch type errors or broken tests; until this job existed,
+# nothing on push ever compiled (all build workflows are dispatch-only), so breakage could sit on
+# main for weeks. Full workspace `cargo test` with the Linux system deps Tauri needs to build.
+# Cold run ~15 min; cached runs a few minutes.
+#
+# If you add heavier gates later, keep them as separate jobs rather than weighing these down.
 
 on:
   push:
@@ -51,3 +52,37 @@ jobs:
           echo "rustfmt.toml at the repo root matches the existing style, so this should only"
           echo "touch code you actually changed. If it wants to reformat files you never opened,"
           echo "please open an issue instead of committing the churn."
+
+  # The compiler, finally. fmt parses but never builds — a type error or a broken unit test could
+  # sit on main for weeks because every compiling workflow here is dispatch-only. This job is the
+  # separate one the comment above prescribed: full workspace test run with the Linux system deps
+  # Tauri needs to even build. First run pays a cold compile (~15 min); rust-cache makes the rest
+  # a few minutes.
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # What maple-app's build scripts probe for (glib/gtk/webkit via pkg-config) plus libmpv-dev:
+      # crates/player links -lmpv and its mpv_keeps_the_gain test drives real libmpv headless
+      # (nothing plays; no audio device opens). live_smoke stays out — it's behind the
+      # integration-tests feature and default `cargo test` never enables it.
+      - name: System deps (Tauri Linux + libmpv)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            libayatana-appindicator3-dev libxdo-dev libssl-dev libmpv-dev
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: . -> target
+          prefix-key: linux-tests
+
+      - name: cargo test --workspace
+        run: cargo test --workspace
