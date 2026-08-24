@@ -29,7 +29,7 @@
 	import MiniPlayer from '$lib/components/MiniPlayer.svelte';
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { auth, initApp, np, playback, ui } from '$lib/player.svelte';
+	import { auth, initApp, inTauri, np, playback, ui } from '$lib/player.svelte';
 	import { win, initWin } from '$lib/win.svelte';
 	import { initZoom } from '$lib/zoom';
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
@@ -53,11 +53,17 @@
 	// The mini player runs this same SPA in a second window (Rust `mini.rs`), so the window label is
 	// what tells the two apart: `mini` gets the widget instead of the app chrome, and none of the
 	// routes below it are ever rendered. Constant for the window's lifetime.
-	const isMini = browser && getCurrentWindow().label === 'mini';
+	//
+	// Guarded on `inTauri`: getCurrentWindow() reads Tauri's injected internals and THROWS in a
+	// plain browser — that was the white screen, caught by the boot-error trap in app.html.
+	const isMini = inTauri && getCurrentWindow().label === 'mini';
 
 	// Phones/tablets: no window controls to draw, no resize borders, no desktop-only boot. Detected
 	// off the UA because Tauri's platform cfg lives in Rust, not here.
 	const isMobile = browser && /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+	// Plain-browser `vite dev`: render the shell with empty data, skip everything desktop.
+	const chromeless = !inTauri || isMobile;
 
 	// Apply the saved accent color before the first paint (ssr=false → nothing renders until now).
 	if (browser) initTheme();
@@ -68,8 +74,9 @@
 		// The boot-error trap in app.html has done its job once the SPA mounted cleanly.
 		(window as any).__mapleClearBootErrors?.();
 		if (isMini) return initApp(true);
-		if (isMobile) {
-			// No desktop window chrome to drive and no self-updater on Android — skip all three.
+		if (chromeless) {
+			// No Tauri backend (browser dev) or no desktop chrome (Android): skip window reveal,
+			// resize sync, zoom and the updater — none of them exist there.
 			return initApp();
 		}
 		// First: it reveals the window (see initWin).
@@ -96,11 +103,11 @@
 	<!-- The window itself is transparent; this root paints the background and, when not maximized,
 	     rounds the corners (the compositor can't round an undecorated window for us). -->
 	<div
-		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized && !isMobile
+		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized && !chromeless
 			? ''
 			: 'rounded-lg'}"
 	>
-		{#if !isMobile}
+		{#if !chromeless}
 			<ResizeBorders />
 			<Titlebar />
 		{/if}

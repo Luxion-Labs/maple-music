@@ -18,6 +18,14 @@ import * as pl from './personal';
 import type { Personal } from './personal';
 import { appearance } from './theme.svelte';
 
+/**
+ * True only inside a Tauri webview, where `__TAURI_INTERNALS__` is injected. Plain-browser
+ * `vite dev` renders the shell without a backend: every command/event call is skipped or fails
+ * soft, but `getCurrentWindow()` would THROW here (it reads internals at call time), so anything
+ * touching window APIs must check this first.
+ */
+export const inTauri = browser && '__TAURI_INTERNALS__' in window;
+
 export const playback = $state({
 	now: null as NowPlaying | null,
 	queue: { items: [], currentIndex: 0 } as QueueState,
@@ -727,6 +735,9 @@ let started = false;
 export function initApp(mini = false): () => void {
 	if (started) return () => {};
 	started = true;
+	// Plain-browser dev (`vite dev` without Tauri): there is no Rust side to subscribe to, and
+	// every `listen()` would reject. Render the shell with empty state instead.
+	if (!inTauri) return () => {};
 	const subs = [
 		api.onNowPlaying((n) => {
 			playback.now = n;
