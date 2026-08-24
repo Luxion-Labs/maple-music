@@ -56,9 +56,9 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/dev-Ninjaa/maple.music/releases/latest/download/latest.json"
+        "https://github.com/akshad-exe/maple-music/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk0MENDMzA1NUFGMDI0NTQKUldSVUpQQmFCY01NbENPbW9XOTRvVU9YQ2lCQytOU2RyeDhHNFhkWHlNc1dITkFmbkd1ZTBlM1gK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDNEVFMTM3OUJGODg2M0UKUldRK2h2aWJOK0ZPUEJHd2NwVEV5UWFveHFnRElSOGZKeEowTXFTOWc5UTNkbGJBUmZkTnVnSW8K",
       "windows": {
         "installMode": "quiet"
       }
