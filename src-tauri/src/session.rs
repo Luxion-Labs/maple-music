@@ -10,17 +10,23 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+#[cfg(any(test, not(target_os = "android")))]
 use tauri::webview::cookie::Cookie;
+#[cfg(not(target_os = "android"))]
 use tauri::webview::PageLoadEvent;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager};
+#[cfg(not(target_os = "android"))]
+use tauri::{WebviewUrl, WebviewWindowBuilder};
 
 use crate::state::{AppState, SignInOutcome};
 
+#[cfg(not(target_os = "android"))]
 const LOGIN_LABEL: &str = "login";
 
 /// WebKitGTK is a WebKit engine, so a macOS Safari UA is the most internally-consistent spoof and
 /// the least likely to trip Google's "this browser may not be secure" block. **Tune here** if
 /// Google rejects it — this is the fragile part (context/15 Path A).
+#[cfg(not(target_os = "android"))]
 const LOGIN_UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 \
                         (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15";
 
@@ -31,6 +37,7 @@ const LOGIN_URL: &str =
 
 /// Open the login webview. Returns immediately; sign-in completes asynchronously (the UI learns via
 /// the `auth-changed` event, or `login-error` on failure).
+#[cfg(not(target_os = "android"))]
 pub fn open_login(app: AppHandle, state: Arc<AppState>) {
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<()>();
 
@@ -97,12 +104,99 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
     }
 }
 
+/// Mobile: Tauri cannot create a second webview window on Android, so the sign-in runs *through
+/// the main window itself* — navigate it to Google, poll until it comes back to music.youtube.com
+/// with fresh auth cookies, feed them through the same `sign_in` path as desktop, then hop back to
+/// the app shell. The SPA unloads while we're away and reloads signed-in on return.
+#[cfg(target_os = "android")]
+pub fn open_login(app: AppHandle, state: Arc<AppState>) {
+    // Home is the shell's own origin; capture it so the restore target matches whatever the app
+    // was built with instead of hardcoding one.
+    let return_url = app
+        .get_webview("main")
+        .and_then(|wv| wv.url().ok())
+        .filter(|u| u.host_str() == Some("tauri.localhost"))
+        .unwrap_or_else(|| {
+            tauri::Url::parse("http://tauri.localhost/").expect("static URL parses")
+        });
+
+    let watcher_app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        // Ten minutes: long enough for a slow 2FA dance, short enough that a forgotten login
+        // screen can't strand the app in Google-land forever.
+        let deadline = std::time::Instant::now() + Duration::from_secs(600);
+        loop {
+            tokio::time::sleep(Duration::from_millis(800)).await;
+            let (on_ytm, cookies) = main_webview_state(&watcher_app).await;
+            if on_ytm && innertube::cookie_sapisid(&cookies).is_some() {
+                match state.sign_in(cookies).await {
+                    Ok(SignInOutcome::Complete) => {
+                        let _ = watcher_app.emit("login-done", ());
+                    }
+                    // Authenticated cookie saved; the account stays unfinished until a channel
+                    // picker picks an identity — same contract as the desktop flow.
+                    Ok(SignInOutcome::SelectionRequired) => {}
+                    Err(e) => {
+                        let _ = watcher_app.emit("login-error", e);
+                    }
+                }
+                navigate_main(&watcher_app, return_url.clone());
+                return;
+            }
+            if std::time::Instant::now() > deadline {
+                let _ = watcher_app.emit("login-error", "Sign-in timed out");
+                navigate_main(&watcher_app, return_url.clone());
+                return;
+            }
+        }
+    });
+
+    navigate_main(&app, tauri::Url::parse(LOGIN_URL).expect("static URL parses"));
+}
+
+/// Navigate the main webview (main-thread hop; Android's webview must be touched from there).
+#[cfg(target_os = "android")]
+fn navigate_main(app: &AppHandle, url: tauri::Url) {
+    let app2 = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if let Some(wv) = app2.get_webview("main") {
+            let _ = wv.navigate(url);
+        }
+    });
+}
+
+/// The main webview's location plus its youtube.com cookie jar, read together on the main thread.
+/// Polling location+cookies rather than subscribing to page-load events keeps this independent of
+/// when navigation callbacks can be attached.
+#[cfg(target_os = "android")]
+async fn main_webview_state(app: &AppHandle) -> (bool, String) {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let app2 = app.clone();
+    let dispatched = app.run_on_main_thread(move || {
+        let state = app2
+            .get_webview("main")
+            .map(|wv| {
+                (
+                    wv.url().map(|u| u.host_str() == Some("music.youtube.com")).unwrap_or(false),
+                    wv.cookies().map(youtube_cookie_header).unwrap_or_default(),
+                )
+            })
+            .unwrap_or((false, String::new()));
+        let _ = tx.send(state);
+    });
+    if dispatched.is_err() {
+        return (false, String::new());
+    }
+    rx.await.unwrap_or((false, String::new()))
+}
+
 /// Merge the youtube-domain cookies into a `Cookie` header string. Reads the platform cookie store
 /// (HttpOnly + secure included), matching what a browser sends to music.youtube.com.
 ///
 /// Hops to the main thread: both backends drive their platform event loop while they wait for the
 /// store (`gtk::main_iteration` on WebKitGTK, `NSRunLoop::mainRunLoop` on WKWebView), so they are
 /// written to be called from the thread that owns it.
+#[cfg(not(target_os = "android"))]
 async fn read_login_cookies(app: &AppHandle) -> String {
     let (tx, rx) = tokio::sync::oneshot::channel();
     let app2 = app.clone();
@@ -117,6 +211,7 @@ async fn read_login_cookies(app: &AppHandle) -> String {
     rx.await.unwrap_or_default()
 }
 
+#[cfg(not(target_os = "android"))]
 fn youtube_cookies(app: &AppHandle) -> String {
     let Some(wv) = app.get_webview_window(LOGIN_LABEL) else { return String::new() };
     let Ok(cookies) = wv.cookies() else { return String::new() };
@@ -178,6 +273,7 @@ mod tests {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 fn close_login(app: &AppHandle) {
     let app2 = app.clone();
     let _ = app.run_on_main_thread(move || {

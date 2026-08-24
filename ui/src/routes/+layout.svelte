@@ -17,6 +17,7 @@
 	import { appearance, initTheme } from '$lib/theme.svelte';
 	import { dragScroll } from '$lib/dnd';
 	import Sidebar from '$lib/components/Sidebar.svelte';
+	import AccountMenu from '$lib/components/AccountMenu.svelte';
 	import Titlebar from '$lib/components/Titlebar.svelte';
 	import ResizeBorders from '$lib/components/ResizeBorders.svelte';
 	import PlayerBar from '$lib/components/PlayerBar.svelte';
@@ -113,19 +114,22 @@
 			<ResizeBorders />
 			<Titlebar />
 		{:else if isMobile()}
-			<!-- Mobile top bar: brand + settings. Navigation itself is the BottomNav tab bar
-			     (Spotify's split); the drawer pattern is gone — primary destinations shouldn't hide. -->
+			<!-- Mobile top bar: brand + account (sign in / profile) + settings — navigation itself is
+			     the BottomNav tab bar (Spotify's split); the drawer pattern is gone. -->
 			<div class="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-3 text-sidebar-foreground">
 				<span class="font-heading text-lg font-bold tracking-tight">Maple</span>
-				<Button
-					variant="ghost"
-					size="icon"
-					class="size-10"
-					onclick={() => (ui.settingsOpen = true)}
-					aria-label="Settings"
-				>
-					<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-5 w-5" />
-				</Button>
+				<div class="flex items-center">
+					<AccountMenu />
+					<Button
+						variant="ghost"
+						size="icon"
+						class="size-10"
+						onclick={() => (ui.settingsOpen = true)}
+						aria-label="Settings"
+					>
+						<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-5 w-5" />
+					</Button>
+				</div>
 			</div>
 		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
