@@ -38,6 +38,7 @@
 	import ArtistLine from './ArtistLine.svelte';
 	import Marquee from './Marquee.svelte';
 	import TrackMenu from './TrackMenu.svelte';
+	import { isMobile } from '$lib/mobile.svelte';
 
 	let {
 		onToggleQueue,
@@ -123,9 +124,56 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions, a11y_no_noninteractive_element_interactions -->
+{#if isMobile}
+	<!-- Phone mini-player, Spotify-style: a slim strip above the tab bar — art, title, play/pause,
+	     next. A hairline progress bar runs along its top edge (the seek slider lives in the
+	     full-screen view). Tapping anywhere that isn't a control opens that view (shared handler). -->
+	<footer
+		onpointerdown={(e) => (pressedControl = isControl(e.target))}
+		onclick={onBarClick}
+		class="relative flex items-center gap-3 border-t bg-card py-2 pl-3 pr-2"
+	>
+		<div
+			class="absolute left-0 top-0 h-0.5 bg-primary transition-[width] duration-300 ease-linear"
+			style="width:{playback.duration ? (playback.position / playback.duration) * 100 : 0}%"
+		></div>
+		{#key playback.now?.videoId}
+			{#if playback.now?.thumbnail}
+				<img
+					src={thumb(playback.now.thumbnail, 120)}
+					alt=""
+					style="max-width:none"
+					class="h-10 w-10 shrink-0 rounded-md object-cover"
+					in:fade={{ duration: 250 }}
+				/>
+			{:else}
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
+				>
+					<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
+				</div>
+			{/if}
+		{/key}
+		<div class="min-w-0 flex-1">
+			<Marquee text={playback.now?.title ?? 'Nothing playing'} class="text-sm font-medium" />
+			<ArtistLine
+				runs={playback.now?.artistRuns}
+				text={playback.now?.artists ?? ''}
+				class="block truncate text-xs text-muted-foreground"
+			/>
+		</div>
+		<Button variant="ghost" size="icon" class="size-11" onclick={() => api.togglePause()} aria-label="Play/pause">
+			<!-- altIcon/showAlt, not a ternary: `icon` freezes at mount. -->
+			<HugeiconsIcon icon={PauseIcon} altIcon={PlayIcon} showAlt={playback.paused} class="h-6 w-6" />
+		</Button>
+		<Button variant="ghost" size="icon" class="size-11" onclick={() => api.nextTrack()} aria-label="Next">
+			<HugeiconsIcon icon={NextIcon} class="h-6 w-6" />
+		</Button>
+	</footer>
+{:else}
 <!-- The chevron button below is the keyboard equivalent of clicking the bar, so the bar itself
      stays a plain region rather than becoming a focusable control wrapping every other control. -->
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions, a11y_no_noninteractive_element_interactions -->
 <footer
 	onpointerdown={(e) => (pressedControl = isControl(e.target))}
 	onclick={onBarClick}
@@ -372,3 +420,4 @@
 		</div>
 	</div>
 </footer>
+{/if}
