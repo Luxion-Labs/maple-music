@@ -70,3 +70,9 @@ webkit2gtk = { version = "2.0", features = ["v2_40"] }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 souvlaki = { version = "0.8.3", default-features = false, features = ["use_zbus"] }
 
+# Remote-inspectable WebView on Android (chrome://inspect over USB). The white screen shipped no
+# console output; this turns the release build's WebView debuggable so its console/network tabs
+# are readable while debugging. Desktop keeps release builds non-debuggable.
+[target.'cfg(target_os = "android")'.dependencies]
+tauri = { version = "2", features = ["devtools"] }
+
