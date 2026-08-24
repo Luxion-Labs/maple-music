@@ -129,15 +129,20 @@ jobs:
           set -euo pipefail
           curl -fsSL --max-time 120 -o /tmp/mpv-android.apk "$MPV_ANDROID_APK_URL"
           mkdir -p "$JNI_DIR"
-          unzip -j -o /tmp/mpv-android.apk "lib/arm64-v8a/libmpv.so" -d "$JNI_DIR"
+          # EVERYTHING under lib/arm64-v8a, not just libmpv.so: mpv's build links ffmpeg
+          # (libav*), swscale/resample and libc++_shared dynamically. Ship only libmpv.so and
+          # Android's linker fails to resolve it at dlopen — the app closes the instant it
+          # opens, before any Rust or UI code runs. That bug produced exactly that report.
+          unzip -j -o /tmp/mpv-android.apk "lib/arm64-v8a/*.so" -d "$JNI_DIR"
 
           # Second copy into the NDK sysroot's triple lib dir: the linker searches there for
           # `-lmpv`, and this survives the CLI's RUSTFLAGS injection (see note above).
           SYSROOT_LIB="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24"
-          cp "$JNI_DIR/libmpv.so" "$SYSROOT_LIB/libmpv.so"
+          cp "$JNI_DIR"/lib*.so "$SYSROOT_LIB/"
 
-          ls -la "$JNI_DIR" "$SYSROOT_LIB/libmpv.so"
+          ls -la "$JNI_DIR"
           test -f "$JNI_DIR/libmpv.so" || { echo "::error::libmpv.so missing from mpv-android APK"; exit 1; }
+          test -f "$JNI_DIR/libavcodec.so" || { echo "::error::ffmpeg libs missing — libmpv.so will not load"; exit 1; }
 
       - name: Build the unsigned release APK (arm64)
         shell: bash
