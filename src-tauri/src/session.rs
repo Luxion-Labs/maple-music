@@ -10,7 +10,6 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-#[cfg(any(test, not(target_os = "android")))]
 use tauri::webview::cookie::Cookie;
 #[cfg(not(target_os = "android"))]
 use tauri::webview::PageLoadEvent;
@@ -113,7 +112,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
     // Home is the shell's own origin; capture it so the restore target matches whatever the app
     // was built with instead of hardcoding one.
     let return_url = app
-        .get_webview("main")
+        .get_webview_window("main")
         .and_then(|wv| wv.url().ok())
         .filter(|u| u.host_str() == Some("tauri.localhost"))
         .unwrap_or_else(|| {
@@ -159,7 +158,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
 fn navigate_main(app: &AppHandle, url: tauri::Url) {
     let app2 = app.clone();
     let _ = app.run_on_main_thread(move || {
-        if let Some(wv) = app2.get_webview("main") {
+        if let Some(wv) = app2.get_webview_window("main") {
             let _ = wv.navigate(url);
         }
     });
@@ -174,7 +173,7 @@ async fn main_webview_state(app: &AppHandle) -> (bool, String) {
     let app2 = app.clone();
     let dispatched = app.run_on_main_thread(move || {
         let state = app2
-            .get_webview("main")
+            .get_webview_window("main")
             .map(|wv| {
                 (
                     wv.url().map(|u| u.host_str() == Some("music.youtube.com")).unwrap_or(false),
