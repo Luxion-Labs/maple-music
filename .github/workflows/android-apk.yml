@@ -123,6 +123,13 @@ jobs:
         shell: bash
         run: cargo tauri android init
 
+      # Brand icons: gen/android comes with Tauri's default glyph; overwrite launcher mipmaps
+      # with Maple's own set (generated once from src-tauri/icons/icon.png — same art as desktop).
+      # Adaptive anydpi-v26 XML + foreground layers so launchers mask cleanly into any shape.
+      - name: Apply the Maple launcher icons
+        shell: bash
+        run: cp -r assets/android-res/. src-tauri/gen/android/app/src/main/res/
+
       - name: Extract libmpv.so (arm64) from mpv-android
         shell: bash
         run: |
