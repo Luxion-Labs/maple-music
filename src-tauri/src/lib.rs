@@ -329,6 +329,7 @@ pub fn run() {
             // it; resolves degrade gracefully (no PoToken) until it lands. context/04 §A.
             if needs_visitor_bootstrap {
                 let st = app_state.clone();
+                #[cfg(desktop)]
                 let potoken = potoken.clone();
                 tauri::async_runtime::spawn(async move {
                     match st.it.fetch_visitor_data().await {
@@ -336,6 +337,8 @@ pub fn run() {
                             st.it.set_visitor_data(Some(vd.clone()));
                             st.db.set_setting("visitor_data", &vd);
                             tracing::info!("visitorData bootstrapped (background)");
+                            // Desktop only — see the prewarm note below.
+                            #[cfg(desktop)]
                             potoken.prewarm(&vd).await;
                         }
                         Err(e) => {
@@ -350,22 +353,26 @@ pub fn run() {
 
             // Prewarm the webviews off the first-play path (context/04 §startup). The delays let
             // the event loop come up first (run_on_main_thread needs it pumping).
+            //
+            // DESKTOP ONLY. On Android these hidden webviews are `data:` URLs, where Tauri's IPC
+            // injection breaks (invoke undefined, property redefinitions, cookie SecurityError) —
+            // the error storm destabilizes the main renderer into a white screen. Mobile playback
+            // resolves through the non-cipher fallback clients, so nothing is lost skipping them.
+            #[cfg(desktop)]
             {
                 let cipher = cipher.clone();
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_millis(1500)).await;
                     cipher.prewarm().await;
                 });
-            }
-            if let Some(vd) = visitor_for_prewarm {
-                let potoken = potoken.clone();
-                tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(Duration::from_millis(2500)).await;
-                    potoken.prewarm(&vd).await;
-                });
-            }
-            // Mint-and-destroy policy (Phase-0 decision): drop the PoToken webview when idle.
-            {
+                if let Some(vd) = visitor_for_prewarm {
+                    let potoken = potoken.clone();
+                    tauri::async_runtime::spawn(async move {
+                        tokio::time::sleep(Duration::from_millis(2500)).await;
+                        potoken.prewarm(&vd).await;
+                    });
+                }
+                // Mint-and-destroy policy (Phase-0 decision): drop the PoToken webview when idle.
                 let potoken = potoken.clone();
                 tauri::async_runtime::spawn(async move {
                     loop {
