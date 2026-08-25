@@ -163,6 +163,29 @@
 				class="block truncate text-xs text-muted-foreground"
 			/>
 		</div>
+		{#if !api.isLocalId(playback.now?.videoId ?? '')}
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={(e) => {
+					e.stopPropagation();
+					toggleLike();
+				}}
+				aria-label="Like"
+				aria-pressed={playback.rating === 'like'}
+			>
+				<span
+					class="inline-flex"
+					class:animate-heart-pop={justLiked}
+					onanimationend={() => (justLiked = false)}
+				>
+					<HugeiconsIcon
+						icon={FavouriteIcon}
+						class="h-5 w-5 {playback.rating === 'like' ? 'fill-current text-primary' : 'text-muted-foreground'}"
+					/>
+				</span>
+			</Button>
+		{/if}
 		<Button variant="ghost" size="icon" class="size-11" onclick={() => api.togglePause()} aria-label="Play/pause">
 			<!-- altIcon/showAlt, not a ternary: `icon` freezes at mount. -->
 			<HugeiconsIcon icon={PauseIcon} altIcon={PlayIcon} showAlt={playback.paused} class="h-6 w-6" />

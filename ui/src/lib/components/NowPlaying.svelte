@@ -147,8 +147,8 @@
 			type="button"
 			onclick={toggle}
 			aria-label="Play/pause"
-			class="relative mx-auto my-4 w-full max-w-[var(--art)] cursor-pointer self-center"
-			style="--art:min(100%, calc(100dvh - 26rem))"
+			class="relative mx-auto my-4 w-full max-w-[var(--art)] cursor-pointer self-center transition-[max-width] duration-200"
+			style="--art:min(100%, calc(100dvh - {sheet ? '42rem' : '22rem'}))"
 		>
 			{#if flash}
 				<div
