@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserHeart, User } from 'lucide-react';
+import { Heart, User } from 'lucide-react';
 import { ArtistPage, BrowseItem } from '../lib/api';
 import { thumb } from '../lib/thumb';
 import { Skeleton } from './ui/Skeleton';
@@ -147,7 +147,7 @@ export function FamiliarArtists({ artistIds, fetchArtist, onOpen, onSubscribe }:
                       toggleSub(a);
                     }}
                   >
-                    <UserHeart className="h-5 w-5" />
+                    <Heart className="h-5 w-5" />
                   </button>
                 </div>
               ))}
@@ -155,7 +155,9 @@ export function FamiliarArtists({ artistIds, fetchArtist, onOpen, onSubscribe }:
         <div
           className="relative hidden w-full md:block"
           style={{ height: `${BOX}px` }}
-          ref={(el) => el && setBoxWidth(el.clientWidth)}
+          ref={(el) => {
+            if (el) setBoxWidth(el.clientWidth);
+          }}
         >
           {(loading ? SLOTS.slice(0, COUNT) : cluster.map((_, i) => SLOTS[i])).map((slot, i) => {
             const a = cluster[i];

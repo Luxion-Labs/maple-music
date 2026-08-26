@@ -258,7 +258,7 @@ export function Shortcuts({
         </div>
       </section>
 
-      {picking && <ShortcutPicker onClose={() => setPicking(false)} onAdd={onAdd} />}
+      {picking && <ShortcutPicker onClose={() => setPicking(false)} onAdd={onAdd} library={[]} picks={picks} />}
     </>
   );
 }

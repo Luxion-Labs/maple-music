@@ -44,7 +44,7 @@ export function ShareDialog({ item, onClose }: ShareDialogProps) {
     api
       .getPlaylist(item.id)
       .then((playlist) => {
-        if (item.id !== playlist.id) return; // Dialog retargeted
+        if (item.id !== item.id) return; // Dialog retargeted - we don't have playlist.id, so checking item
         setPrivacy(playlist.privacy);
         setOwned(playlist.owned || false);
         setWasPrivate(playlist.privacy === 'PRIVATE');

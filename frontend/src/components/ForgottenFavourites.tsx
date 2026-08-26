@@ -55,7 +55,7 @@ export function ForgottenFavourites({
               song={song}
               compact
               active={currentVideoId === song.video_id}
-              onPlay={() => onPlay(i)}
+              onplay={() => onPlay(i)}
               onAdd={() => onAdd(song)}
             />
           </div>

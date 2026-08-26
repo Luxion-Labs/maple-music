@@ -18,7 +18,7 @@ export function SavedInPlaylists({ playlists }: SavedInPlaylistsProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ right: 0, top: 0, openUp: false });
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeTimeoutRef = useRef<NodeJS.Timeout>();
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const shown = playlists.slice(0, SHOWN);
   const extra = playlists.length - shown.length;

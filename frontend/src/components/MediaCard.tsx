@@ -25,8 +25,8 @@ export const MediaCard: React.FC<Props> = ({ item, compact = false }) => {
 
   React.useEffect(() => { setAttempt(0); }, [item.thumbnail]);
 
-  const sized = thumb(item.thumbnail, 400);
-  const small = thumb(item.thumbnail, 200);
+  const sized = item.thumbnail ? thumb(item.thumbnail, 400) : null;
+  const small = item.thumbnail ? thumb(item.thumbnail, 200) : null;
   const src = attempt === 0 ? sized : item.thumbnail;
   const srcSet = attempt === 0 && small && sized && small !== sized
     ? `${small} 1x, ${sized} 2x` : undefined;
@@ -35,13 +35,13 @@ export const MediaCard: React.FC<Props> = ({ item, compact = false }) => {
     e.stopPropagation();
     if (playing) return;
     setPlaying(true);
-    try { await playItem(item, navigate); }
+    try { await playItem(item); }
     finally { setPlaying(false); }
   }
 
   function handleOpen() {
     if (item.kind === 'song') {
-      playItem(item, navigate).catch(() => {});
+      playItem(item).catch(() => {});
     } else {
       navigate(item.kind === 'album' ? `/album/${encodeURIComponent(item.id)}`
         : item.kind === 'artist' ? `/artist/${encodeURIComponent(item.id)}`

@@ -46,7 +46,7 @@ export const SearchSuggest: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(-1);
   const loadedFor = useRef('');
-  const debounce = useRef<ReturnType<typeof setTimeout>>();
+  const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const close = useCallback(() => {
     clearTimeout(debounce.current);

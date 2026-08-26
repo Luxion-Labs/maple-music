@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Dialog } from './ui/Dialog';
-import { Minus, Plus, FastForward, Waveform } from 'lucide-react';
+import { Minus, Plus, FastForward, Activity } from 'lucide-react';
 
 interface TempoPitchDialogProps {
   open: boolean;
@@ -110,7 +110,7 @@ export function TempoPitchDialog({
             />
           )}
           <Stepper
-            icon={Waveform}
+            icon={Activity}
             label="Pitch"
             value={semitones > 0 ? `+${semitones}` : String(semitones)}
             onStep={handleSemitonesStep}
