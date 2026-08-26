@@ -59,16 +59,14 @@ jobs:
         with:
           targets: aarch64-linux-android
 
-      # pnpm before setup-node so `cache: pnpm` can find the binary — same shape as the other jobs.
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      # Bun for frontend package management
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 10
+          bun-version: latest
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: ui/pnpm-lock.yaml
 
       # AGP wants JDK 17+; 21 is what the local machine has.
       - uses: actions/setup-java@v4
@@ -78,7 +76,7 @@ jobs:
 
       - name: Frontend deps
         shell: bash
-        run: cd ui && pnpm install --frozen-lockfile
+        run: cd frontend && bun install --frozen-lockfile
 
       # Locate the NDK the runner ships and teach bindgen where the Android sysroot lives.
       # Without BINDGEN_EXTRA_CLANG_ARGS, rquickjs-sys's bindgen pass generates bindings sized
@@ -96,7 +94,7 @@ jobs:
 
       - name: Frontend build
         shell: bash
-        run: (cd ui && pnpm build)
+        run: (cd frontend && bun run build)
 
       # RUSTFLAGS note: the Tauri CLI injects its own target-scoped
       # CARGO_TARGET_*_RUSTFLAGS (-landroid -llog -lOpenSLES), which overrides any generic
@@ -159,8 +157,8 @@ jobs:
 
       - name: Build the unsigned release APK (arm64)
         shell: bash
-        # beforeBuildCommand emptied: we just ran `pnpm build` ourselves. Left on, tauri runs
-        # `pnpm build` from the repo root, which has no package.json (see windows-release.yml).
+        # beforeBuildCommand emptied: we just ran `bun run build` ourselves. Left on, tauri runs
+        # `bun run build` from the repo root, which has no package.json (see windows-release.yml).
         run: >
           cargo tauri android build --apk --target aarch64
           --config '{"build":{"beforeBuildCommand":""}}'
