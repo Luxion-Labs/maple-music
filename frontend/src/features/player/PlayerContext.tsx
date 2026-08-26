@@ -180,7 +180,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return (
     <PlayerContext.Provider value={{
-      now, queue, paused, position, duration, volume, speed, semitones, np,
+      now, queue, paused, position, duration, volume, speed, semitones, np, addToPlaylistSongs,
       play: (song) => tauriOr(() => api.play(song)),
       playIndex: (i) => tauriOr(() => api.playIndex(i)),
       playNext: (items, from) => tauriOr(() => api.playNext(items, from)),
@@ -203,6 +203,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setPlaybackParams: (s, sem) => tauriOr(() => api.setPlaybackParams(s, sem)),
       toggleNowPlayingLike,
       openPlayer, setNpOpen, setNpTab,
+      openAddToPlaylist: setAddToPlaylistSongs,
+      closeAddToPlaylist: () => setAddToPlaylistSongs(null),
+      ratingOf: (song) => ratings[song.video_id] ?? song.rating ?? 'indifferent',
+      isLiked: (song) => (ratings[song.video_id] ?? song.rating) === 'like',
+      toggleRating: async (song, want) => {
+        const cur = ratings[song.video_id] ?? song.rating ?? 'indifferent';
+        const next = cur === want ? 'indifferent' : want;
+        setRatings((r) => ({ ...r, [song.video_id]: next }));
+        if (api.isTauri) await api.rate(song.video_id, next);
+      },
+      asSong: (item) => ({ video_id: item.id, title: item.title, artists: item.subtitle ?? '', thumbnail: item.thumbnail } as any),
     }}>
       {children}
     </PlayerContext.Provider>
