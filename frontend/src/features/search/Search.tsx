@@ -8,6 +8,7 @@ import { TrackRowSkeleton } from '../../components/TrackRowSkeleton';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { Button } from '../../components/ui/Button';
+import { SearchSuggest } from '../../components/SearchSuggest';
 import { getCached, putCached } from '../home/pageCache';
 import type { SearchResults, SongItem, BrowseItem } from '../../lib/api';
 import * as api from '../../lib/api';
