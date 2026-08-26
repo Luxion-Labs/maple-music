@@ -87,8 +87,8 @@ export function ChannelPicker({
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Content
         className="gap-0 overflow-hidden p-0 sm:max-w-md"
-        onEscapeKeyDown={(e) => required && e.preventDefault()}
-        onPointerDownOutside={(e) => required && e.preventDefault()}
+        onEscapeKeyDown={(e: KeyboardEvent) => required && e.preventDefault()}
+        onPointerDownOutside={(e: React.PointerEvent) => required && e.preventDefault()}
       >
         <div className="border-b px-5 py-4">
           <Dialog.Title className="text-lg font-semibold">Choose a YouTube channel</Dialog.Title>
