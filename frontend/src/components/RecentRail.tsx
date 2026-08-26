@@ -1,0 +1,124 @@
+import { Play, Music, User, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
+import { BrowseItem } from '../lib/api';
+import { thumb } from '../lib/thumb';
+
+interface RecentRailProps {
+  items: BrowseItem[];
+  onOpen: (item: BrowseItem) => void;
+  onPlay: (item: BrowseItem) => Promise<void>;
+}
+
+const ON_REPEAT_ID = 'VLRDrepeat';
+
+/**
+ * Recently played playlists/albums/artists, as a list you scan rather than a row you page
+ * through. Recents are re-entry points — you already know what they are, you just want the one
+ * you want — so a title you can read beats a wall of identical squares.
+ *
+ * Bare rows on purpose, against the surfaced tiles of Shortcuts directly above: the things you
+ * chose are elevated, the ones the app noticed for you are not.
+ */
+export function RecentRail({ items, onOpen, onPlay }: RecentRailProps) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+
+  const handlePlay = async (item: BrowseItem) => {
+    if (busy) return;
+    setBusy(item.id);
+    try {
+      await onPlay(item);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleImageError = (id: string) => {
+    setFailed({ ...failed, [id]: true });
+  };
+
+  return (
+    <section>
+      <h2 className="mb-3 font-heading text-lg font-semibold">Jump back in</h2>
+      {/* CSS columns, same idiom as Forgotten favourites: fills top-to-bottom, balances the last
+          column itself, and needs no row count per breakpoint. */}
+      <div className="columns-1 gap-x-6 md:columns-2 xl:columns-3">
+        {items.map((item) => {
+          const round = item.kind === 'artist';
+          const onRepeat = item.id === ON_REPEAT_ID;
+
+          return (
+            <div
+              key={item.id}
+              className="group/row flex break-inside-avoid cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left transition-colors hover:bg-accent/10"
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpen(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onOpen(item);
+                }
+              }}
+              title={item.subtitle ? `${item.title} — ${item.subtitle}` : item.title}
+            >
+              <div
+                className={`relative h-10 w-10 shrink-0 overflow-hidden bg-muted ${
+                  round ? 'rounded-full' : 'rounded-md'
+                }`}
+              >
+                {item.thumbnail && !failed[item.id] ? (
+                  <img
+                    src={thumb(item.thumbnail, 400)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    draggable="false"
+                    onError={() => handleImageError(item.id)}
+                  />
+                ) : (
+                  <div
+                    className={`flex h-full w-full items-center justify-center ${
+                      onRepeat ? 'bg-primary/10 text-primary' : 'text-muted-foreground/50'
+                    }`}
+                  >
+                    {onRepeat ? (
+                      <RotateCcw className="h-4 w-4" />
+                    ) : round ? (
+                      <User className="h-4 w-4" />
+                    ) : (
+                      <Music className="h-4 w-4" />
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{item.title}</div>
+                {/* Subtitle when there is one (a creator or an artist tells you more than the kind
+                    does); the kind is the fallback so the second line never collapses. */}
+                <div className="truncate text-xs capitalize text-muted-foreground">
+                  {item.subtitle || item.kind}
+                </div>
+              </div>
+              {!round && (
+                <button
+                  className={`flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-md transition-opacity hover:brightness-110 focus-visible:opacity-100 group-hover/row:opacity-100 ${
+                    busy === item.id ? 'animate-pulse' : ''
+                  }`}
+                  disabled={busy === item.id}
+                  aria-label={`Play ${item.title}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlay(item);
+                  }}
+                >
+                  <Play className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
