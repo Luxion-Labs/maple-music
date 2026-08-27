@@ -102,7 +102,7 @@ export const ListenTogether: React.FC<Props> = ({ open, onClose }) => {
             <div className="flex flex-col gap-4">
               <div className="flex rounded-lg bg-muted p-1 text-sm">
                 {(['join', 'host'] as const).map((m) => (
-                  <button key={m} className={cn('flex-1 rounded-md py-1.5 font-medium transition-colors', mode === m ? 'bg-background shadow-sm' : 'text-muted-foreground')} onClick={() => setMode(m)}>
+                  <button key={m} className={cn('flex-1 rounded-md py-1.5 font-medium transition-colors', mode === m ? 'bg-background shadow-xs' : 'text-muted-foreground')} onClick={() => setMode(m)}>
                     {m === 'join' ? 'Join' : 'Host'}
                   </button>
                 ))}
@@ -111,11 +111,11 @@ export const ListenTogether: React.FC<Props> = ({ open, onClose }) => {
                 <form className="flex flex-col gap-3" onSubmit={join}>
                   <div>
                     <div className="mb-1 text-sm font-medium">Invite code</div>
-                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50" value={inviteInput} onChange={(e) => setInviteInput(e.target.value)} placeholder="Paste the invite your friend sent" />
+                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary/50" value={inviteInput} onChange={(e) => setInviteInput(e.target.value)} placeholder="Paste the invite your friend sent" />
                   </div>
                   <div>
                     <div className="mb-1 text-sm font-medium">Your name</div>
-                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary/50" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
                   </div>
                   <button type="submit" disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">Join session</button>
                 </form>
@@ -123,11 +123,11 @@ export const ListenTogether: React.FC<Props> = ({ open, onClose }) => {
                 <div className="flex flex-col gap-3">
                   <div>
                     <div className="mb-1 text-sm font-medium">Sync server</div>
-                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50" value={serverUrl} onChange={(e) => setServerUrl(e.target.value)} placeholder="wss://your-server/ws" />
+                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary/50" value={serverUrl} onChange={(e) => setServerUrl(e.target.value)} placeholder="wss://your-server/ws" />
                   </div>
                   <div>
                     <div className="mb-1 text-sm font-medium">Your name</div>
-                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                    <input className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary/50" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
                   </div>
                   <button disabled={busy} onClick={host} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">Start a session</button>
                 </div>

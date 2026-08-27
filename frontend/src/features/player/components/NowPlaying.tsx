@@ -25,7 +25,6 @@ export const NowPlaying: React.FC = () => {
   const [thumbAttempt, setThumbAttempt] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTab, setSheetTab] = useState<'queue' | 'lyrics'>('queue');
-  const [exiting, setExiting] = useState(false);
 
   const shuffleOn = queue.shuffle ?? false;
   const repeatMode = queue.repeat ?? 'off';
@@ -34,14 +33,10 @@ export const NowPlaying: React.FC = () => {
   const rating = now?.rating ?? 'indifferent';
 
   useEffect(() => { setThumbAttempt(0); }, [now?.thumbnail]);
-  useEffect(() => { if (!np.open) { setSheetOpen(false); setExiting(false); } }, [np.open]);
+  useEffect(() => { if (!np.open) { setSheetOpen(false); } }, [np.open]);
 
   const handleClose = useCallback(() => {
-    setExiting(true);
-    setTimeout(() => {
-      setExiting(false);
-      setNpOpen(false);
-    }, 250);
+    setNpOpen(false);
   }, [setNpOpen]);
 
   const toggleFlash = () => {
@@ -50,16 +45,15 @@ export const NowPlaying: React.FC = () => {
     togglePause();
   };
 
-  if (!np.open && !exiting) return null;
   if (!now) return null;
 
   const thumbSrc = thumb(now.thumbnail, thumbAttempt === 0 ? 720 : thumbAttempt === 1 ? 400 : 120);
 
   return (
-    <div className={cn(
-      "fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]",
-      exiting ? "np-exit" : "np-enter",
-    )}>
+    <div
+      className="now-playing-panel fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+      data-open={np.open ? 'true' : 'false'}
+    >
       {/* blurred backdrop */}
       {now.thumbnail && (
         <img

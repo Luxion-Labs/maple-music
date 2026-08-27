@@ -77,7 +77,7 @@ export function CommunityCard({
       className="group flex h-full flex-col gap-2 rounded-2xl border bg-card/40 p-2.5 transition-colors hover:border-foreground/20 hover:bg-card"
     >
       <button className="block w-full min-w-0 cursor-pointer" onClick={() => onOpen(item)} title={item.title}>
-        <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
+        <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-xl bg-muted shadow-xs transition-shadow duration-300 group-hover:shadow-lg">
           {mosaic.length === 4 ? (
             <div className="grid h-full w-full grid-cols-2 grid-rows-2">
               {mosaic.map((m, i) => (

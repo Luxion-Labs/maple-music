@@ -13,14 +13,14 @@ interface TrackFilterProps {
  */
 export function TrackFilter({ value, onChange, placeholder = 'Search this list' }: TrackFilterProps) {
   return (
-    <div className="flex items-center gap-2 rounded-full border bg-background/80 py-1.5 pl-3 pr-2 shadow-sm backdrop-blur focus-within:border-accent">
+    <div className="flex items-center gap-2 rounded-full border bg-background/80 py-1.5 pl-3 pr-2 shadow-xs backdrop-blur focus-within:border-accent">
       <Search strokeWidth={2.5} className="h-4 w-4 shrink-0 text-muted-foreground" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-48 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        className="w-48 min-w-0 bg-transparent text-sm outline-hidden placeholder:text-muted-foreground"
         onKeyDown={(e) => e.key === 'Escape' && onChange('')}
       />
       {/* Holds its 1rem either way, so typing doesn't resize the box. */}

@@ -121,7 +121,7 @@ export function ShareDialog({ item, onClose }: ShareDialogProps) {
 
         <div className="mt-4 flex items-center gap-2 rounded-lg border bg-muted/40 py-1 pl-3 pr-1">
           <input
-            className="min-w-0 flex-1 bg-transparent py-1 text-sm text-muted-foreground outline-none"
+            className="min-w-0 flex-1 bg-transparent py-1 text-sm text-muted-foreground outline-hidden"
             value={url}
             readOnly
             onFocus={(e) => e.currentTarget.select()}

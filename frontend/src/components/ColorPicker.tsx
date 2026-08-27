@@ -89,7 +89,7 @@ export const ColorPicker: React.FC<Props> = ({ value, onChange }) => {
             onChange(e.target.value);
           }
         }}
-        className="rounded-lg border bg-background px-3 py-1.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/50"
+        className="rounded-lg border bg-background px-3 py-1.5 font-mono text-sm outline-hidden focus:ring-2 focus:ring-primary/50"
         placeholder="#rrggbb"
         spellCheck={false}
       />

@@ -176,7 +176,7 @@ export function FamiliarArtists({ artistIds, fetchArtist, onOpen, onSubscribe }:
                   <Skeleton className="h-full w-full rounded-full" />
                 ) : (
                   <button
-                    className="h-full w-full cursor-pointer overflow-hidden rounded-full bg-muted shadow-sm transition-transform duration-200 ease-out hover:scale-105 hover:shadow-lg"
+                    className="h-full w-full cursor-pointer overflow-hidden rounded-full bg-muted shadow-xs transition-transform duration-200 ease-out hover:scale-105 hover:shadow-lg"
                     title={a.name ?? 'Artist'}
                     aria-label={a.name ?? 'Artist'}
                     onClick={() => onOpen(a.channelId)}

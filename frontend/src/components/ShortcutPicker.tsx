@@ -52,7 +52,7 @@ export function ShortcutPicker({ onClose, onAdd, library, picks }: ShortcutPicke
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter your library…"
-          className="mb-2 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mb-2 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         />
         {matches.length > 0 ? (
           <div className="min-h-0 flex-1 overflow-y-auto">

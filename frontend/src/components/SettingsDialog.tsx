@@ -203,7 +203,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
                 <div className="border-b py-3">
                   <div className="font-medium mb-3">Proxy</div>
                   <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); set('proxy', proxyInput.trim()); }}>
-                    <input className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50" value={proxyInput} onChange={(e) => setProxyInput(e.target.value)} placeholder="http://host:port (blank = none)" />
+                    <input className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary/50" value={proxyInput} onChange={(e) => setProxyInput(e.target.value)} placeholder="http://host:port (blank = none)" />
                     <button type="submit" className="rounded-lg border px-3 py-2 text-sm hover:bg-muted">Save</button>
                   </form>
                 </div>
