@@ -10,10 +10,12 @@ import { cn } from '../../../lib/utils';
 import { Marquee } from '../../../components/Marquee';
 import { ArtistLine } from '../../../components/ArtistLine';
 import { Slider } from '../../../components/ui/Slider';
+import { useIsMobile } from '../../../lib/mobile';
 
-const fmt = (secs: number) => {
-  if (!secs || secs < 0) return '0:00';
-  const t = Math.floor(secs);
+const fmt = (secs: number | string | undefined | null) => {
+  const n = Number(secs);
+  if (!Number.isFinite(n) || n < 0) return '0:00';
+  const t = Math.floor(n);
   const h = Math.floor(t / 3600);
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;
@@ -46,6 +48,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   const rating = now?.rating ?? 'indifferent';
   const shuffleOn = queue.shuffle ?? false;
   const repeat = queue.repeat ?? 'off';
+  const mobile = useIsMobile();
   const [justLiked, setJustLiked] = useState(false);
 
   const toggleLike = useCallback(() => {
@@ -67,6 +70,59 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   }, [np.open, setNpOpen]);
 
   if (!now) return null;
+
+  // Mobile mini-player: a single clean row (thumb + title/artist + prev/play/next), YT-Music style.
+  // Everything else — shuffle, repeat, seek, lyrics, queue, like, add, volume — lives in the full
+  // NowPlaying view so the strip never runs out of room on a phone screen. Tap the bar to expand.
+  if (mobile) {
+    return (
+      <footer
+        className={cn(
+          'relative flex h-16 shrink-0 items-center gap-3 border-t bg-card px-3',
+          className,
+        )}
+        onPointerDown={(e) => { pressedControl.current = isControl(e.target); }}
+        onClick={(e) => { if (!isControl(e.target)) onBarClick(); }}
+      >
+        {now.thumbnail ? (
+          <img src={thumb(now.thumbnail, 120)} alt="" className="size-12 shrink-0 rounded-lg object-cover" />
+        ) : (
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50">
+            <Play className="h-5 w-5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <Marquee text={now.title ?? 'Nothing playing'} className="text-sm font-medium" />
+          <ArtistLine
+            runs={now.artistRuns}
+            text={now.artists ?? ''}
+            className="block truncate text-xs text-muted-foreground"
+          />
+        </div>
+        <button
+          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+          onClick={(e) => { e.stopPropagation(); prevTrack(); }}
+          aria-label="Previous"
+        >
+          <SkipBack className="size-5" />
+        </button>
+        <button
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95"
+          onClick={(e) => { e.stopPropagation(); togglePause(); }}
+          aria-label={paused ? 'Play' : 'Pause'}
+        >
+          {paused ? <Play className="size-5" /> : <Pause className="size-5" />}
+        </button>
+        <button
+          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+          onClick={(e) => { e.stopPropagation(); nextTrack(); }}
+          aria-label="Next"
+        >
+          <SkipForward className="size-5" />
+        </button>
+      </footer>
+    );
+  }
 
   return (
     <footer
@@ -98,7 +154,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           <ArtistLine
             runs={now.artistRuns}
             text={now.artists ?? ''}
-            className="block max-w-full text-xs text-muted-foreground"
+            className="block max-w-full truncate text-xs text-muted-foreground"
           />
         </div>
         {now && (

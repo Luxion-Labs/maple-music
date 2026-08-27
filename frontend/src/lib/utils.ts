@@ -5,9 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDuration(secs: number | undefined | null): string {
-  if (!secs || secs < 0) return '0:00';
-  const t = Math.floor(secs);
+export function formatDuration(secs: number | string | undefined | null): string {
+  const n = Number(secs);
+  if (!Number.isFinite(n) || n < 0) return '0:00';
+  const t = Math.floor(n);
   const h = Math.floor(t / 3600);
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;

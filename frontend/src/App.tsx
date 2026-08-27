@@ -158,7 +158,7 @@ function AppShell() {
             />
           )}
 
-          <main key={epoch} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden page-scroll">
+          <main key={epoch} className="min-h-0 flex-1 overflow-y-auto page-scroll">
             <div key={location.pathname} className="page-enter">
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
