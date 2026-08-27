@@ -28,3 +28,7 @@ rustypipe_reports/
 scripts/bench.sh
 
 .codegraph
+
+# Downloaded Android build artifacts (APKs placed at repo root for transfer)
+/maple-mobile.apk
+/maple-arm64-aligned.apk
