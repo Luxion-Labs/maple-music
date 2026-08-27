@@ -65,9 +65,8 @@ export const Shelf: React.FC<Props> = ({
       >
         <div
           ref={rowRef}
-          className={cn('flex snap-x overflow-x-auto pb-2', community ? 'gap-3' : 'gap-2')}
+          className={cn('no-scrollbar flex snap-x overflow-x-auto pb-2', community ? 'gap-3' : 'gap-2')}
           onScroll={update}
-          style={{ scrollbarWidth: 'none' }}
         >
           {items.map((item, i) => {
             const rich = community && item.kind === 'playlist';

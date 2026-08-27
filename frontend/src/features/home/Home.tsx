@@ -142,7 +142,7 @@ export const Home: React.FC = () => {
     <div ref={scrollRef} className="page-scroll">
       {/* Mood chips */}
       {chips.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto px-4 pb-2 pt-4" style={{ scrollbarWidth: 'none' }}>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2 pt-4">
           {[{ title: 'All', params: '' }, ...chips].map((c) => (
             <button
               key={c.params}
@@ -198,7 +198,7 @@ export const Home: React.FC = () => {
             return (
               <section key={block.id}>
                 <h2 className="mb-3 text-base font-semibold">Jump back in</h2>
-                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
                   {recent.map((item) => (
                     <div key={item.id} className="w-36 shrink-0">
                       <div className="flex flex-col gap-1.5">

@@ -25,28 +25,30 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSignOut,
   onSwitchChannel,
 }) => (
-  <div className="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-3 text-sidebar-foreground">
-    <div className="flex items-center">
-      <Button variant="ghost" size="icon" className="size-10" onClick={onOpenDrawer} aria-label="Open menu">
-        <Menu className="h-5 w-5" />
-      </Button>
-      <span className="font-heading text-lg font-bold tracking-tight">Maple</span>
-    </div>
-    <div className="flex items-center">
-      <AccountMenu
-        isSignedIn={account.signedIn}
-        accountName={account.name ?? undefined}
-        accountThumbnail={account.thumbnail ?? undefined}
-        accountHandle={account.handle ?? undefined}
-        accountEmail={account.email ?? undefined}
-        canSwitch={account.canSwitch}
-        onSignIn={onSignIn}
-        onSignOut={onSignOut}
-        onSwitchChannel={onSwitchChannel}
-      />
-      <Button variant="ghost" size="icon" className="size-10" onClick={onOpenSettings} aria-label="Settings">
-        <Settings className="h-5 w-5" />
-      </Button>
+  <div className="shrink-0 border-b bg-sidebar px-3 text-sidebar-foreground pt-[env(safe-area-inset-top)]">
+    <div className="flex h-12 items-center justify-between">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" className="size-10" onClick={onOpenDrawer} aria-label="Open menu">
+          <Menu className="h-5 w-5" />
+        </Button>
+        <span className="font-heading text-lg font-bold tracking-tight">Maple</span>
+      </div>
+      <div className="flex items-center">
+        <AccountMenu
+          isSignedIn={account.signedIn}
+          accountName={account.name ?? undefined}
+          accountThumbnail={account.thumbnail ?? undefined}
+          accountHandle={account.handle ?? undefined}
+          accountEmail={account.email ?? undefined}
+          canSwitch={account.canSwitch}
+          onSignIn={onSignIn}
+          onSignOut={onSignOut}
+          onSwitchChannel={onSwitchChannel}
+        />
+        <Button variant="ghost" size="icon" className="size-10" onClick={onOpenSettings} aria-label="Settings">
+          <Settings className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   </div>
 );

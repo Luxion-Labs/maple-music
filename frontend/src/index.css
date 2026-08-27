@@ -471,6 +471,19 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 12.75rem;
   }
+
+  /* Hide horizontal rail scrollbars on touch/Chromium too. `scrollbar-width: none` alone only
+     hides Firefox's; the global ::-webkit-scrollbar rules make Chromium draw a visible 8px bar
+     under every shelf/chip row between collections. This wipes both. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 /* ---- NowPlaying enter/exit (CSS-native with @starting-style) ---- */

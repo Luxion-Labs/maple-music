@@ -39,7 +39,7 @@ export const Library: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b px-4 py-2" style={{ scrollbarWidth: 'none' }}>
+      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b px-4 py-2">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
