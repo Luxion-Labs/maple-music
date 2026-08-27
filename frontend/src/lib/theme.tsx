@@ -127,6 +127,28 @@ export function useTheme(): ThemeContextValue {
   return useContext(ThemeContext);
 }
 
+const DARK_KEY = 'dark-mode';
+
+/**
+ * Light/dark mode. Defaults to dark (matching the app's original look) and persists the choice.
+ * Toggles `.dark` on <html>, which all the `dark:` utilities and the `.dark` token overrides read.
+ */
+export function useDarkMode(): [boolean, () => void] {
+  const [dark, setDark] = useState<boolean>(() => {
+    const stored = localStorage.getItem(DARK_KEY);
+    if (stored !== null) return stored !== 'false';
+    return true;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem(DARK_KEY, dark ? 'true' : 'false');
+  }, [dark]);
+
+  const toggle = useCallback(() => setDark((d) => !d), []);
+  return [dark, toggle];
+}
+
 function loadCustom(): Custom {
   try {
     const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY) ?? '{}');

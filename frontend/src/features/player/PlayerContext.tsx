@@ -14,6 +14,7 @@ interface PlayerState {
   np: { open: boolean; tab: 'queue' | 'lyrics' };
   /** Songs queued for Add-to-Playlist modal (null = closed) */
   addToPlaylistSongs: SongItem[] | null;
+  settingsOpen: boolean;
 }
 
 interface PlayerActions {
@@ -42,6 +43,7 @@ interface PlayerActions {
   openPlayer: () => void;
   setNpOpen: (open: boolean) => void;
   setNpTab: (tab: 'queue' | 'lyrics') => void;
+  setSettingsOpen: (open: boolean) => void;
   /** Open the add-to-playlist picker with these songs */
   openAddToPlaylist: (songs: SongItem[]) => void;
   closeAddToPlaylist: () => void;
@@ -65,7 +67,7 @@ const defaultQueue: QueueState = {
 
 const PlayerContext = createContext<PlayerCtx>({
   now: null, queue: defaultQueue, paused: true, position: 0, duration: 0,
-  volume: 50, speed: 1, semitones: 0, addToPlaylistSongs: null,
+  volume: 50, speed: 1, semitones: 0, addToPlaylistSongs: null, settingsOpen: false,
   np: { open: false, tab: 'queue' },
   play: async () => {}, playIndex: async () => {}, playNext: async () => {},
   addToQueue: async () => {}, playPlaylist: async () => {}, startRadio: async () => {},
@@ -74,7 +76,7 @@ const PlayerContext = createContext<PlayerCtx>({
   setRepeat: async () => {}, cycleRepeat: async () => {}, togglePause: async () => {},
   seek: async () => {}, setVolume: async () => {}, dragVolume: () => {},
   commitVolume: async () => {}, toggleMute: async () => {}, setPlaybackParams: async () => {},
-  toggleNowPlayingLike: async () => {}, openPlayer: () => {}, setNpOpen: () => {}, setNpTab: () => {},
+  toggleNowPlayingLike: async () => {}, openPlayer: () => {}, setNpOpen: () => {}, setNpTab: () => {}, setSettingsOpen: () => {},
   openAddToPlaylist: () => {}, closeAddToPlaylist: () => {},
   ratingOf: () => 'indifferent', isLiked: () => false, toggleRating: async () => {},
   asSong: (item) => ({ video_id: item.id, title: item.title, artists: item.subtitle ?? '', thumbnail: item.thumbnail } as any),
@@ -90,6 +92,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [speed, setSpeed] = useState(1);
   const [semitones, setSemitones] = useState(0);
   const [np, setNpState] = useState({ open: false, tab: 'queue' as 'queue' | 'lyrics' });
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [addToPlaylistSongs, setAddToPlaylistSongs] = useState<SongItem[] | null>(null);
   const preMute = useRef(50);
   const rafId = useRef(0);
@@ -191,13 +194,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return (
     <PlayerContext.Provider value={{
-      now, queue, paused, position, duration, volume, speed, semitones, np, addToPlaylistSongs,
+      now, queue, paused, position, duration, volume, speed, semitones, np, addToPlaylistSongs, settingsOpen,
       play: (song) => tauriOr(() => api.play(song)),
       playIndex: (i) => tauriOr(() => api.playIndex(i)),
       playNext: (items, from) => tauriOr(() => api.playNext(items, from)),
       addToQueue: (items, from, cont) => tauriOr(() => api.addToQueue(items, from, cont)),
       playPlaylist: (items, start, sid, sname, shuf, cont) => tauriOr(() =>
-        api.playNext(items, sname).then()),  // simplified for browser; Tauri routes through playPlaylist command
+        api.playPlaylist(items, start ?? null, sid, sname, shuf, cont)),
       startRadio: (kind, id, name) => tauriOr(() => api.startRadio(kind, id, name)),
       nextTrack: () => tauriOr(() => api.nextTrack()),
       prevTrack: () => tauriOr(() => api.prevTrack()),
@@ -213,7 +216,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       dragVolume, commitVolume, toggleMute,
       setPlaybackParams: (s, sem) => tauriOr(() => api.setPlaybackParams(s, sem)),
       toggleNowPlayingLike,
-      openPlayer, setNpOpen, setNpTab,
+      openPlayer, setNpOpen, setNpTab, setSettingsOpen,
       openAddToPlaylist: setAddToPlaylistSongs,
       closeAddToPlaylist: () => setAddToPlaylistSongs(null),
       ratingOf: (song) => ratings[song.video_id] ?? song.rating ?? 'indifferent',

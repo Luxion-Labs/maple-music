@@ -31,6 +31,12 @@ export const NowPlaying: React.FC = () => {
   const progressPct = duration > 0 ? ((seekDrag ?? position) / duration) * 100 : 0;
   const shownPos = seekDrag ?? position;
   const rating = now?.rating ?? 'indifferent';
+  const [justLiked, setJustLiked] = useState(false);
+
+  const toggleLike = () => {
+    if (rating !== 'like') setJustLiked(true);
+    toggleNowPlayingLike();
+  };
 
   useEffect(() => { setThumbAttempt(0); }, [now?.thumbnail]);
   useEffect(() => { if (!np.open) { setSheetOpen(false); } }, [np.open]);
@@ -156,10 +162,15 @@ export const NowPlaying: React.FC = () => {
       <div className="relative mt-3 flex justify-center">
         <button
           className={cn('rounded-full p-2', rating === 'like' ? 'text-primary' : 'text-muted-foreground')}
-          onClick={toggleNowPlayingLike}
+          onClick={toggleLike}
           aria-label="Like"
         >
-          <Heart className={cn('h-6 w-6', rating === 'like' && 'fill-current')} />
+          <span
+            className={cn('inline-flex', justLiked && 'animate-heart-pop')}
+            onAnimationEnd={() => setJustLiked(false)}
+          >
+            <Heart className={cn('h-6 w-6', rating === 'like' && 'fill-current')} />
+          </span>
         </button>
       </div>
 

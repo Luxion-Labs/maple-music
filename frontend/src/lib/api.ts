@@ -319,6 +319,10 @@ export const loginWebview = () => invoke<void>('login_webview');
 // ---- Misc ----
 export const getSettings = () => invoke<Record<string, string>>('get_settings');
 export const setSetting = (key: string, value: string) => invoke<void>('set_setting', { key, value });
+export const lastfmStatus = () => invoke<LastfmState>('lastfm_status');
+export const lastfmConnect = () => invoke<void>('lastfm_connect');
+export const lastfmDisconnect = () => invoke<void>('lastfm_disconnect');
+export const onLastfmState = (cb: (s: LastfmState) => void) => listen<LastfmState>('lastfm-state', cb);
 export const getStreamClients = () => invoke<string[]>('get_stream_clients');
 export const clearCaches = () => invoke<void>('clear_caches');
 export const allowFontFile = (path: string) => invoke<void>('allow_font_file', { path });

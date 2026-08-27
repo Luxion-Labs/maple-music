@@ -172,6 +172,26 @@ export function arrangeSections<T extends { key: string }>(sections: T[], p: Per
 
 export const hiddenSections = (p: Personal): Set<string> => new Set(p.home.hidden);
 
+/**
+ * Pinned first in pin order, then everything else by last played (ties and never-played items keep
+ * the backend's order). Pinned ids are resolved through the live list and excluded from the tail,
+ * so a playlist can never appear twice and a pin left over from a deleted playlist just vanishes.
+ */
+export function orderLibrary(items: BrowseItem[], p: Personal): BrowseItem[] {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const pinned = p.pins.map((id) => byId.get(id)).filter((i): i is BrowseItem => !!i);
+  const pinnedIds = new Set(pinned.map((i) => i.id));
+  const rest = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !pinnedIds.has(item.id))
+    .sort(
+      (a, b) =>
+        (p.recent[b.item.id]?.at ?? 0) - (p.recent[a.item.id]?.at ?? 0) || a.index - b.index
+    )
+    .map(({ item }) => item);
+  return [...pinned, ...rest];
+}
+
 export function saveHomeLayout(p: Personal, order: string[], hidden: string[]): void {
   p.home = { order, hidden };
 }
