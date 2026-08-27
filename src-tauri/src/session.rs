@@ -30,9 +30,12 @@ const LOGIN_UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWeb
                         (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15";
 
 /// Google sign-in with `continue` back to YTM, so a successful login redirects to music.youtube.com
-/// (our completion signal).
+/// (our completion signal). AccountChooser (rather than ServiceLogin) makes Google show its account
+/// picker when the webview already has sessions, so the user can explicitly choose which ID to sign
+/// in as instead of Google auto-picking the default account. With no accounts stored it falls
+/// through to the normal sign-in form, so first-time login is unchanged.
 const LOGIN_URL: &str =
-    "https://accounts.google.com/ServiceLogin?service=youtube&continue=https://music.youtube.com/";
+    "https://accounts.google.com/AccountChooser?service=youtube&continue=https://music.youtube.com/";
 
 /// Open the login webview. Returns immediately; sign-in completes asynchronously (the UI learns via
 /// the `auth-changed` event, or `login-error` on failure).
@@ -85,6 +88,8 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
         let res = WebviewWindowBuilder::new(&app2, LOGIN_LABEL, WebviewUrl::External(url))
             .title("Sign in to YouTube Music")
             .inner_size(480.0, 720.0)
+            .resizable(false)
+            .center()
             .user_agent(LOGIN_UA)
             .on_page_load(move |_w, payload| {
                 if matches!(payload.event(), PageLoadEvent::Finished)
