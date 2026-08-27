@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from './lib/theme';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { PersonalProvider } from './features/home/PersonalContext';
@@ -56,7 +56,7 @@ function useIsMini(): boolean {
 }
 
 function AppShell() {
-  const { addToPlaylistSongs, closeAddToPlaylist, settingsOpen, setSettingsOpen } = usePlayer();
+  const { addToPlaylistSongs, closeAddToPlaylist, settingsOpen, setSettingsOpen, np, setNpOpen } = usePlayer();
   const { account, epoch, signIn, signOut } = useAuth();
   const { playlists, loadLibrary } = useLibrary();
   const { lt } = useLT();
@@ -71,6 +71,35 @@ function AppShell() {
   const [maximized, setMaximized] = useState(getMaximized);
 
   const closeDrawer = () => setDrawerOpen(false);
+  const navigate = useNavigate();
+
+  // Android system back button: implement a proper back stack instead of letting it quit the app
+  // from a Settings submenu. Top-most overlay first, then deep routes, then exit from the home tabs.
+  useEffect(() => {
+    if (!mobile || !api.isTauri) return;
+    let active = true;
+    let unlisten: (() => void) | undefined;
+    (async () => {
+      const { onBackButtonPress } = await import('@tauri-apps/api/app');
+      const onBack = async () => {
+        if (addToPlaylistSongs) { closeAddToPlaylist(); return; }
+        if (settingsOpen) { setSettingsOpen(false); return; }
+        if (ltOpen) { setLtOpen(false); return; }
+        if (np.open) { setNpOpen(false); return; }
+        if (queueOpen) { setQueueOpen(false); return; }
+        if (lyricsOpen) { setLyricsOpen(false); return; }
+        if (drawerOpen) { setDrawerOpen(false); return; }
+        if (pickerOpen) { setPickerOpen(false); return; }
+        const deep = /^\/(album|artist|playlist|list|search-more)(\/|$)/.test(location.pathname);
+        if (deep) { navigate(-1); return; }
+        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+        getCurrentWindow().destroy().catch(() => {});
+      };
+      const listener = await onBackButtonPress(onBack);
+      if (active) unlisten = () => { listener.unregister().catch(() => {}); };
+    })();
+    return () => { active = false; unlisten?.(); };
+  }, [mobile, addToPlaylistSongs, closeAddToPlaylist, settingsOpen, setSettingsOpen, ltOpen, np.open, setNpOpen, queueOpen, lyricsOpen, drawerOpen, pickerOpen, navigate, location.pathname]);
 
   // Init once: show the window (post-restore) + track maximize state; start zoom hotkeys.
   useEffect(() => {
@@ -114,10 +143,10 @@ function AppShell() {
         </>
       )}
 
-      <div className="relative flex min-h-0 flex-1 md:flex-row">
+      <div className="relative flex min-h-0 min-w-0 flex-1 md:flex-row">
         {desktop && <Sidebar />}
 
-        <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           {!desktop && !isMini && (
             <TopBar
               account={account}
@@ -129,7 +158,7 @@ function AppShell() {
             />
           )}
 
-          <main key={epoch} className="min-h-0 flex-1 overflow-y-auto page-scroll">
+          <main key={epoch} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden page-scroll">
             <div key={location.pathname} className="page-enter">
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
