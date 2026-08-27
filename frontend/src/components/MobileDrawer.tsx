@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Home, Search, Library, Settings, Music, RotateCcw } from 'lucide-react';
+import { Home, Search, Library, Settings, Music, RotateCcw, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { BrowseItem } from '../lib/api';
 import { thumb } from '../lib/thumb';
@@ -11,6 +11,8 @@ interface MobileDrawerProps {
   accountName?: string;
   isSignedIn?: boolean;
   onOpenSettings?: () => void;
+  onOpenListenTogether?: () => void;
+  ltActive?: boolean;
 }
 
 const ON_REPEAT_ID = 'VLRDrepeat';
@@ -32,6 +34,8 @@ export function MobileDrawer({
   accountName,
   isSignedIn,
   onOpenSettings,
+  onOpenListenTogether,
+  ltActive,
 }: MobileDrawerProps) {
   const location = useLocation();
 
@@ -135,6 +139,19 @@ export function MobileDrawer({
         </div>
 
         <div className="shrink-0 border-t p-2">
+          {onOpenListenTogether && (
+            <button
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent/50"
+              onClick={() => {
+                onClose();
+                onOpenListenTogether();
+              }}
+            >
+              <Users strokeWidth={2} className="h-5 w-5 shrink-0" />
+              Listen Together
+              {ltActive && <span className="ml-auto h-2 w-2 rounded-full bg-primary" />}
+            </button>
+          )}
           <button
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent/50"
             onClick={() => {

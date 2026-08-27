@@ -152,6 +152,8 @@ function AppShell() {
               account={account}
               onOpenDrawer={() => setDrawerOpen(true)}
               onOpenSettings={() => setSettingsOpen(true)}
+              onOpenListenTogether={() => setLtOpen(true)}
+              ltActive={lt.role !== 'none'}
               onSignIn={() => signIn()}
               onSignOut={() => signOut()}
               onSwitchChannel={() => setPickerOpen(true)}
@@ -195,6 +197,8 @@ function AppShell() {
           accountName={account.name ?? undefined}
           isSignedIn={account.signedIn}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenListenTogether={() => setLtOpen(true)}
+          ltActive={lt.role !== 'none'}
         />
       )}
 

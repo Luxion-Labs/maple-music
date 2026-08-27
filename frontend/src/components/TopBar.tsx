@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, Settings } from 'lucide-react';
+import { Menu, Settings, Users } from 'lucide-react';
 import { Button } from './ui/Button';
+import { cn } from '../lib/utils';
 import { AccountMenu } from './AccountMenu';
 import type { Account } from '../lib/api';
 
@@ -8,6 +9,8 @@ interface TopBarProps {
   account: Account;
   onOpenDrawer: () => void;
   onOpenSettings: () => void;
+  onOpenListenTogether?: () => void;
+  ltActive?: boolean;
   onSignIn: () => void;
   onSignOut: () => void;
   onSwitchChannel?: () => void;
@@ -21,6 +24,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   account,
   onOpenDrawer,
   onOpenSettings,
+  onOpenListenTogether,
+  ltActive,
   onSignIn,
   onSignOut,
   onSwitchChannel,
@@ -45,6 +50,20 @@ export const TopBar: React.FC<TopBarProps> = ({
           onSignOut={onSignOut}
           onSwitchChannel={onSwitchChannel}
         />
+        {onOpenListenTogether && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('relative size-10', ltActive && 'text-primary')}
+            onClick={onOpenListenTogether}
+            aria-label="Listen Together"
+          >
+            <Users className="h-5 w-5" />
+            {ltActive && (
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+            )}
+          </Button>
+        )}
         <Button variant="ghost" size="icon" className="size-10" onClick={onOpenSettings} aria-label="Settings">
           <Settings className="h-5 w-5" />
         </Button>
