@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ArrowDown, List, Mic, Play, Pause, SkipBack, SkipForward,
   Shuffle, Repeat, Repeat1, Heart,
@@ -25,6 +25,7 @@ export const NowPlaying: React.FC = () => {
   const [thumbAttempt, setThumbAttempt] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTab, setSheetTab] = useState<'queue' | 'lyrics'>('queue');
+  const [exiting, setExiting] = useState(false);
 
   const shuffleOn = queue.shuffle ?? false;
   const repeatMode = queue.repeat ?? 'off';
@@ -33,7 +34,15 @@ export const NowPlaying: React.FC = () => {
   const rating = now?.rating ?? 'indifferent';
 
   useEffect(() => { setThumbAttempt(0); }, [now?.thumbnail]);
-  useEffect(() => { if (!np.open) setSheetOpen(false); }, [np.open]);
+  useEffect(() => { if (!np.open) { setSheetOpen(false); setExiting(false); } }, [np.open]);
+
+  const handleClose = useCallback(() => {
+    setExiting(true);
+    setTimeout(() => {
+      setExiting(false);
+      setNpOpen(false);
+    }, 250);
+  }, [setNpOpen]);
 
   const toggleFlash = () => {
     setFlash(paused ? 'play' : 'pause');
@@ -41,12 +50,16 @@ export const NowPlaying: React.FC = () => {
     togglePause();
   };
 
-  if (!np.open || !now) return null;
+  if (!np.open && !exiting) return null;
+  if (!now) return null;
 
   const thumbSrc = thumb(now.thumbnail, thumbAttempt === 0 ? 720 : thumbAttempt === 1 ? 400 : 120);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] animate-slide-up">
+    <div className={cn(
+      "fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]",
+      exiting ? "np-exit" : "np-enter",
+    )}>
       {/* blurred backdrop */}
       {now.thumbnail && (
         <img
@@ -59,7 +72,7 @@ export const NowPlaying: React.FC = () => {
 
       {/* header */}
       <header className="relative flex items-center justify-between">
-        <button className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent/20" onClick={() => setNpOpen(false)} aria-label="Minimise">
+        <button className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent/20" onClick={handleClose} aria-label="Minimise">
           <ArrowDown className="h-6 w-6" />
         </button>
         <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Now Playing</span>

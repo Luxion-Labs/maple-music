@@ -92,6 +92,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [np, setNpState] = useState({ open: false, tab: 'queue' as 'queue' | 'lyrics' });
   const [addToPlaylistSongs, setAddToPlaylistSongs] = useState<SongItem[] | null>(null);
   const preMute = useRef(50);
+  const rafId = useRef(0);
+  const pendingPos = useRef(0);
   // ratings cache: videoId → Rating
   const [ratings, setRatings] = useState<Record<string, Rating>>({});
 
@@ -130,7 +132,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
       });
       cleanup.push(u3);
-      const u4 = await api.onPosition((p) => { if (mounted) setPosition(p); });
+      const u4 = await api.onPosition((p) => {
+        if (!mounted) return;
+        pendingPos.current = p;
+        if (!rafId.current) {
+          rafId.current = requestAnimationFrame(() => {
+            rafId.current = 0;
+            setPosition(pendingPos.current);
+          });
+        }
+      });
       cleanup.push(u4);
       const u5 = await api.onDuration((d) => { if (mounted) setDuration(d); });
       cleanup.push(u5);
@@ -139,7 +150,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const u7 = await api.onVolume((v) => { if (mounted) setVolumeState(v); });
       cleanup.push(u7);
     })();
-    return () => { mounted = false; cleanup.forEach((u) => u()); };
+    return () => { mounted = false; if (rafId.current) cancelAnimationFrame(rafId.current); cleanup.forEach((u) => u()); };
   }, []);
 
   // Actions
