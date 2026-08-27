@@ -25,7 +25,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSignOut,
   onSwitchChannel,
 }) => (
-  <div className="shrink-0 border-b bg-sidebar px-3 text-sidebar-foreground pt-[env(safe-area-inset-top)]">
+  <div className="shrink-0 border-b bg-sidebar px-3 text-sidebar-foreground pt-safe">
     <div className="flex h-12 items-center justify-between">
       <div className="flex items-center">
         <Button variant="ghost" size="icon" className="size-10" onClick={onOpenDrawer} aria-label="Open menu">

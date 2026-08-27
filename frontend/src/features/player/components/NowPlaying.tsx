@@ -57,7 +57,7 @@ export const NowPlaying: React.FC = () => {
 
   return (
     <div
-      className="now-playing-panel fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+      className="now-playing-panel fixed inset-0 z-40 flex flex-col overflow-hidden bg-background px-5 pb-[max(1.25rem,var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))] pt-[max(0.75rem,var(--safe-area-inset-top,env(safe-area-inset-top,0px)))]"
       data-open={np.open ? 'true' : 'false'}
     >
       {/* blurred backdrop */}

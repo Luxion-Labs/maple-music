@@ -61,12 +61,14 @@ export function MobileDrawer({
         onClick={onClose}
         aria-label="Close menu"
       />
-      <div className="fixed inset-y-0 left-0 z-50 flex w-[min(80vw,20rem)] flex-col border-r bg-sidebar text-sidebar-foreground shadow-xl pb-[env(safe-area-inset-bottom)] transition-transform duration-220 ease-out">
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-          <span className="font-heading text-lg font-bold tracking-tight">Maple</span>
-          {isSignedIn && accountName && (
-            <span className="ml-auto truncate text-xs text-muted-foreground">{accountName}</span>
-          )}
+      <div className="fixed inset-y-0 left-0 z-50 flex w-[min(80vw,20rem)] flex-col border-r bg-sidebar text-sidebar-foreground shadow-xl pb-safe transition-transform duration-220 ease-out">
+        <div className="shrink-0 border-b pt-safe">
+          <div className="flex h-12 items-center gap-2 px-4">
+            <span className="font-heading text-lg font-bold tracking-tight">Maple</span>
+            {isSignedIn && accountName && (
+              <span className="ml-auto truncate text-xs text-muted-foreground">{accountName}</span>
+            )}
+          </div>
         </div>
 
         <nav className="shrink-0 p-2">

@@ -484,6 +484,15 @@
     width: 0;
     height: 0;
   }
+
+  /* Android safe-area insets as padding. On the Android build the native shell injects the real
+     inset px into --safe-area-inset-*, because the WebView reports env(safe-area-inset-*) as 0;
+     on desktop/browser these fall back to env(). Use these on any chrome that must sit below the
+     status bar / above the gesture bar. */
+  .pt-safe { padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); }
+  .pb-safe { padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)); }
+  .pl-safe { padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px)); }
+  .pr-safe { padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px)); }
 }
 
 /* ---- NowPlaying enter/exit (CSS-native with @starting-style) ---- */

@@ -13,7 +13,9 @@ export const QueuePanel: React.FC<Props> = ({ onClose }) => (
       aria-label="Close queue"
     />
     <aside className="absolute inset-y-0 right-0 z-30 flex h-full w-80 max-w-[80vw] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-right duration-200">
-      <h2 className="border-b px-4 py-3 font-heading text-sm font-semibold">Queue</h2>
+      <div className="shrink-0 border-b pt-safe">
+        <h2 className="px-4 py-3 font-heading text-sm font-semibold">Queue</h2>
+      </div>
       <QueueList />
     </aside>
   </>

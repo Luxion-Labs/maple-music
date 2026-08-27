@@ -4,7 +4,7 @@ import { Home, Search, Library } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export const BottomNav: React.FC = () => (
-  <nav className="flex shrink-0 border-t bg-card pb-[env(safe-area-inset-bottom)]">
+  <nav className="flex shrink-0 border-t bg-card pb-safe">
     {[
       { to: '/',        icon: Home,    label: 'Home' },
       { to: '/search',  icon: Search,  label: 'Search' },

@@ -229,7 +229,8 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-card">
       {/* top bar */}
-      <div className="flex shrink-0 items-center gap-1 border-b px-2 py-2.5">
+      <div className="shrink-0 border-b pt-safe">
+        <div className="flex items-center gap-1 px-2 py-2.5">
         <button onClick={goBack} className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-muted" aria-label={inSection ? 'Back' : 'Close'}>
           {inSection ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </button>
@@ -241,6 +242,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
             <X className="h-5 w-5" />
           </button>
         )}
+      </div>
       </div>
 
       {/* content */}

@@ -32,7 +32,8 @@ export const LyricsPanel: React.FC<Props> = ({ onClose, queueOpen = false }) => 
             : `absolute inset-y-0 right-0 z-30 flex h-full w-80 max-w-[80vw] flex-col border-l bg-card shadow-2xl ${queueOpen ? 'lg:right-80' : ''}`
         }
       >
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="shrink-0 border-b pt-safe">
+          <div className="flex items-center justify-between px-4 py-3">
           <h2 className="font-heading text-sm font-semibold">Lyrics</h2>
           <button
             onClick={() => setExpanded(!expanded)}
@@ -41,6 +42,7 @@ export const LyricsPanel: React.FC<Props> = ({ onClose, queueOpen = false }) => 
           >
             {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
+        </div>
         </div>
         <LyricsView expanded={expanded} />
       </aside>
