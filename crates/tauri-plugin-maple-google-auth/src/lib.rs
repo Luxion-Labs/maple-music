@@ -8,10 +8,9 @@
 //! chooser), and the caller falls back to the plain webview sign-in.
 
 use serde::Deserialize;
-use tauri::{
-    plugin::{PluginApi, PluginHandle, TauriPlugin},
-    AppHandle, Runtime,
-};
+use tauri::{plugin::PluginHandle, Manager, Runtime};
+#[cfg(target_os = "android")]
+use tauri::AppHandle;
 
 #[cfg(target_os = "android")]
 const PLUGIN_IDENTIFIER: &str = "com.maple.googleauth";
@@ -28,10 +27,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 .register_android_plugin(PLUGIN_IDENTIFIER, "GoogleAuthPlugin")
                 .ok();
             #[cfg(not(target_os = "android"))]
-            let handle: Option<PluginHandle<R>> = {
-                let _ = &api;
-                None
-            };
+            let handle: Option<PluginHandle<R>> = None;
             api.app().manage(GoogleAuth(handle));
             Ok(())
         })

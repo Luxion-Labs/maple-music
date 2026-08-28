@@ -4956,6 +4956,7 @@ dependencies = [
 name = "tauri-plugin-maple-google-auth"
 version = "0.4.13"
 dependencies = [
+ "serde",
  "tauri",
  "tauri-plugin",
 ]
