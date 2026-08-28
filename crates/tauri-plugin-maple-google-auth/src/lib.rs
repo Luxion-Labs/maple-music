@@ -10,9 +10,9 @@
 #[cfg(target_os = "android")]
 use serde::Deserialize;
 use tauri::plugin::{PluginHandle, TauriPlugin};
-use tauri::{Manager, Runtime};
 #[cfg(target_os = "android")]
 use tauri::AppHandle;
+use tauri::{Manager, Runtime};
 
 #[cfg(target_os = "android")]
 const PLUGIN_IDENTIFIER: &str = "com.maple.googleauth";
@@ -25,9 +25,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     tauri::plugin::Builder::new("maple-google-auth")
         .setup(|_, api| {
             #[cfg(target_os = "android")]
-            let handle = api
-                .register_android_plugin(PLUGIN_IDENTIFIER, "GoogleAuthPlugin")
-                .ok();
+            let handle = api.register_android_plugin(PLUGIN_IDENTIFIER, "GoogleAuthPlugin").ok();
             #[cfg(not(target_os = "android"))]
             let handle: Option<PluginHandle<R>> = None;
             api.app().manage(GoogleAuth(handle));
@@ -39,14 +37,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 /// Present the native Google account chooser and return the email the user picked.
 /// `None` means "no account chosen" (user cancelled, or no native chooser on this platform).
 #[cfg(target_os = "android")]
-pub async fn suggest_account<R: Runtime>(
-    app: &AppHandle<R>,
-) -> Result<Option<String>, String> {
+pub async fn suggest_account<R: Runtime>(app: &AppHandle<R>) -> Result<Option<String>, String> {
     let state = app.state::<GoogleAuth<R>>();
-    let handle = state
-        .0
-        .as_ref()
-        .ok_or_else(|| "native Google auth plugin is not available".to_string())?;
+    let handle =
+        state.0.as_ref().ok_or_else(|| "native Google auth plugin is not available".to_string())?;
     let res = handle
         .run_mobile_plugin_async::<SuggestAccountResponse>("suggestAccount", ())
         .await
