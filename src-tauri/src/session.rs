@@ -49,6 +49,7 @@ fn login_url(hint: Option<&str>) -> String {
 /// the `auth-changed` event, or `login-error` on failure).
 #[cfg(not(target_os = "android"))]
 pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
+    let hint = hint.map(String::from);
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<()>();
 
     // When the webview lands on music.youtube.com, capture cookies + sign in. Runs off the
@@ -92,7 +93,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
         if let Some(w) = app2.get_webview_window(LOGIN_LABEL) {
             let _ = w.destroy();
         }
-        let Ok(url) = tauri::Url::parse(&login_url(hint)) else { return };
+        let Ok(url) = tauri::Url::parse(&login_url(hint.as_deref())) else { return };
         let res = WebviewWindowBuilder::new(&app2, LOGIN_LABEL, WebviewUrl::External(url))
             .title("Sign in to YouTube Music")
             .inner_size(480.0, 720.0)
