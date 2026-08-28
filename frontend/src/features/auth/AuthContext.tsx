@@ -30,7 +30,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async () => {
     if (!api.isTauri) return;
-    await api.loginWebview();
+    // On Android, let the user pick which Google ID from the native Credential Manager account
+    // chooser (lists the device's Google accounts), then open the webview pre-selected to that ID.
+    // The chooser returns null on desktop, when it isn't available, or if the user backs out —
+    // in every case we fall back to the plain webview sign-in page.
+    let hint: string | undefined;
+    try {
+      hint = (await api.googleSuggestAccount()) ?? undefined;
+    } catch {
+      hint = undefined;
+    }
+    await api.loginWebview(hint);
   };
 
   const signOut = async () => {

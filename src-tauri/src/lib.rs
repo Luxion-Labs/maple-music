@@ -433,6 +433,7 @@ pub fn run() {
             commands::switch_account,
             commands::sign_out,
             commands::login_webview,
+            commands::google_suggest_account,
             commands::open_mini,
             commands::close_mini,
             commands::get_home,

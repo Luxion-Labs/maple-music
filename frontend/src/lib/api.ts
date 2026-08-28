@@ -314,7 +314,11 @@ export const getAccount = () => invoke<Account>('get_account');
 export const getAccountIdentities = () => invoke<AccountIdentity[]>('get_account_identities');
 export const switchAccount = (selectionKey: string) => invoke<void>('switch_account', { selectionKey });
 export const signOut = () => invoke<void>('sign_out');
-export const loginWebview = () => invoke<void>('login_webview');
+export const loginWebview = (hint?: string) => invoke<void>('login_webview', hint ? { hint } : {});
+/** Ask the native Android layer for the Google account the user picked from the system account
+ *  chooser (Google Credential Manager). Null when unavailable (desktop, no chooser, or cancel) —
+ *  callers fall back to the plain webview sign-in. */
+export const googleSuggestAccount = () => invoke<string | null>('google_suggest_account');
 
 // ---- Misc ----
 export const getSettings = () => invoke<Record<string, string>>('get_settings');

@@ -326,13 +326,33 @@ pub async fn sign_out(state: St<'_>) -> Result<(), String> {
     Ok(())
 }
 
-/// Open the in-app Google sign-in webview (context/15 Path A). Completes asynchronously; the UI
-/// hears back via `auth-changed` (success) or `login-error`.
+/// Present the native Google account chooser (Android Credential Manager) and return the email of
+/// the account the user picked. `None` means "no account chosen" — on desktop, when the native
+/// chooser isn't available, or when the user cancels — and the caller then falls back to the plain
+/// webview sign-in. Wired to the native layer via the `maple-google-auth` plugin on Android.
 #[tauri::command]
-pub async fn login_webview(state: St<'_>) -> Result<(), String> {
+pub async fn google_suggest_account(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        let _ = &app;
+        return Ok(None); // native chooser lands here; until the plugin is enabled this is a no-op
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = &app;
+        Ok(None)
+    }
+}
+
+/// Open the in-app Google sign-in webview (context/15 Path A). Completes asynchronously; the UI
+/// hears back via `auth-changed` (success) or `login-error`. `hint`, when given, is the email the
+/// user picked from the native account chooser — it preselects that Google account so the captured
+/// session cookie belongs to the account they wanted, not Google's default.
+#[tauri::command]
+pub async fn login_webview(state: St<'_>, hint: Option<String>) -> Result<(), String> {
     let state = state.inner().clone();
     let app = state.app.clone();
-    crate::session::open_login(app, state);
+    crate::session::open_login(app, state, hint.as_deref());
     Ok(())
 }
 

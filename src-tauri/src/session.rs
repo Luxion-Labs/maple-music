@@ -34,13 +34,21 @@ const LOGIN_UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWeb
 /// picker when the webview already has sessions, so the user can explicitly choose which ID to sign
 /// in as instead of Google auto-picking the default account. With no accounts stored it falls
 /// through to the normal sign-in form, so first-time login is unchanged.
-const LOGIN_URL: &str =
-    "https://accounts.google.com/AccountChooser?service=youtube&continue=https://music.youtube.com/";
+fn login_url(hint: Option<&str>) -> String {
+    let mut url = "https://accounts.google.com/AccountChooser?service=youtube&continue=https://music.youtube.com/".to_string();
+    if let Some(hint) = hint {
+        // Preselect the account the user just picked from the native chooser, so it is the one
+        // Google authenticates and the one whose YouTube session cookie we capture.
+        url.push_str("&login_hint=");
+        url.push_str(&urlencoding::encode(hint));
+    }
+    url
+}
 
 /// Open the login webview. Returns immediately; sign-in completes asynchronously (the UI learns via
 /// the `auth-changed` event, or `login-error` on failure).
 #[cfg(not(target_os = "android"))]
-pub fn open_login(app: AppHandle, state: Arc<AppState>) {
+pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<()>();
 
     // When the webview lands on music.youtube.com, capture cookies + sign in. Runs off the
@@ -84,7 +92,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
         if let Some(w) = app2.get_webview_window(LOGIN_LABEL) {
             let _ = w.destroy();
         }
-        let Ok(url) = tauri::Url::parse(LOGIN_URL) else { return };
+        let Ok(url) = tauri::Url::parse(&login_url(hint)) else { return };
         let res = WebviewWindowBuilder::new(&app2, LOGIN_LABEL, WebviewUrl::External(url))
             .title("Sign in to YouTube Music")
             .inner_size(480.0, 720.0)
@@ -113,7 +121,8 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
 /// with fresh auth cookies, feed them through the same `sign_in` path as desktop, then hop back to
 /// the app shell. The SPA unloads while we're away and reloads signed-in on return.
 #[cfg(target_os = "android")]
-pub fn open_login(app: AppHandle, state: Arc<AppState>) {
+pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
+    let hint = hint.map(str::to_owned);
     // Home is the shell's own origin; capture it so the restore target matches whatever the app
     // was built with instead of hardcoding one.
     let return_url = app
@@ -155,7 +164,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>) {
         }
     });
 
-    navigate_main(&app, tauri::Url::parse(LOGIN_URL).expect("static URL parses"));
+    navigate_main(&app, tauri::Url::parse(&login_url(hint.as_deref())).expect("static URL parses"));
 }
 
 /// Navigate the main webview (main-thread hop; Android's webview must be touched from there).
