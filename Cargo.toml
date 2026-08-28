@@ -5,6 +5,7 @@ members = [
     "crates/player",
     "crates/listen-protocol",
     "crates/sync-server",
+    "crates/tauri-plugin-maple-google-auth",
     "src-tauri",
 ]
 

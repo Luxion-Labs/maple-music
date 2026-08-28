@@ -334,8 +334,7 @@ pub async fn sign_out(state: St<'_>) -> Result<(), String> {
 pub async fn google_suggest_account(app: tauri::AppHandle) -> Result<Option<String>, String> {
     #[cfg(target_os = "android")]
     {
-        let _ = &app;
-        return Ok(None); // native chooser lands here; until the plugin is enabled this is a no-op
+        maple_google_auth_plugin::suggest_account(&app).await
     }
     #[cfg(not(target_os = "android"))]
     {

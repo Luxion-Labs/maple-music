@@ -207,6 +207,7 @@ pub fn run() {
             );
     }
     builder
+        .plugin(maple_google_auth_plugin::init())
         .setup(|app| {
             let handle = app.handle().clone();
 

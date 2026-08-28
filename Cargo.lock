@@ -2626,6 +2626,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-dialog",
+ "tauri-plugin-maple-google-auth",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
@@ -4949,6 +4950,14 @@ dependencies = [
  "thiserror 2.0.18",
  "toml 1.1.2+spec-1.1.0",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-maple-google-auth"
+version = "0.4.13"
+dependencies = [
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]

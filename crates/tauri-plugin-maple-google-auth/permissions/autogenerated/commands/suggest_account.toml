@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-suggest-account"
+description = "Enables the suggest_account command without any pre-configured scope."
+commands.allow = ["suggest_account"]
+
+[[permission]]
+identifier = "deny-suggest-account"
+description = "Denies the suggest_account command without any pre-configured scope."
+commands.deny = ["suggest_account"]

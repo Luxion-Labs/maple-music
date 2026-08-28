@@ -1,0 +1,16 @@
+[package]
+name = "tauri-plugin-maple-google-auth"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Native Google account chooser (Credential Manager) for Maple on Android"
+links = "tauri-plugin-maple-google-auth"
+
+[lib]
+name = "maple_google_auth_plugin"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2" }
