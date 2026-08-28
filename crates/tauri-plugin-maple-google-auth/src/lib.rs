@@ -7,8 +7,10 @@
 //! wanted — not Google's default. On every other platform this returns `Ok(None)` (no native
 //! chooser), and the caller falls back to the plain webview sign-in.
 
+#[cfg(target_os = "android")]
 use serde::Deserialize;
-use tauri::{plugin::PluginHandle, Manager, Runtime};
+use tauri::plugin::{PluginHandle, TauriPlugin};
+use tauri::{Manager, Runtime};
 #[cfg(target_os = "android")]
 use tauri::AppHandle;
 
