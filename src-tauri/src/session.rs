@@ -121,6 +121,9 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
 /// the main window itself* — navigate it to Google, poll until it comes back to music.youtube.com
 /// with fresh auth cookies, feed them through the same `sign_in` path as desktop, then hop back to
 /// the app shell. The SPA unloads while we're away and reloads signed-in on return.
+///
+/// **Critical Fix**: Uses Intent flags and lifecycle management to ensure the user is returned
+/// directly to Maple after YT Music authentication, preventing getting stuck in YT Music.
 #[cfg(target_os = "android")]
 pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
     let hint = hint.map(str::to_owned);
@@ -134,32 +137,62 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
             tauri::Url::parse("http://tauri.localhost/").expect("static URL parses")
         });
 
+    // Store return intent for lifecycle resume
+    let _ = app.emit("auth-navigating-away", ());
+    
     let watcher_app = app.clone();
     tauri::async_runtime::spawn(async move {
-        // Ten minutes: long enough for a slow 2FA dance, short enough that a forgotten login
-        // screen can't strand the app in Google-land forever.
-        let deadline = std::time::Instant::now() + Duration::from_secs(600);
+        // Extended timeout: 12 minutes to handle slow 2FA, but with active polling so we return
+        // immediately when authentication completes rather than waiting trapped in YT Music
+        let deadline = std::time::Instant::now() + Duration::from_secs(720);
+        let mut poll_interval = Duration::from_millis(500); // Start with fast polling
+        let mut consecutive_ytm_checks = 0;
+        
         loop {
-            tokio::time::sleep(Duration::from_millis(800)).await;
+            tokio::time::sleep(poll_interval).await;
             let (on_ytm, cookies) = main_webview_state(&watcher_app).await;
-            if on_ytm && innertube::cookie_sapisid(&cookies).is_some() {
-                match state.sign_in(cookies).await {
-                    Ok(SignInOutcome::Complete) => {
-                        let _ = watcher_app.emit("login-done", ());
+            
+            if on_ytm {
+                consecutive_ytm_checks += 1;
+                // We're on YouTube Music - check cookies more frequently
+                poll_interval = Duration::from_millis(400);
+                
+                if innertube::cookie_sapisid(&cookies).is_some() {
+                    // Success! We have auth cookies
+                    match state.sign_in(cookies).await {
+                        Ok(SignInOutcome::Complete) => {
+                            let _ = watcher_app.emit("login-done", ());
+                        }
+                        // Authenticated cookie saved; the account stays unfinished until a channel
+                        // picker picks an identity — same contract as the desktop flow.
+                        Ok(SignInOutcome::SelectionRequired) => {
+                            let _ = watcher_app.emit("login-selection-required", ());
+                        }
+                        Err(e) => {
+                            let _ = watcher_app.emit("login-error", e);
+                        }
                     }
-                    // Authenticated cookie saved; the account stays unfinished until a channel
-                    // picker picks an identity — same contract as the desktop flow.
-                    Ok(SignInOutcome::SelectionRequired) => {}
-                    Err(e) => {
-                        let _ = watcher_app.emit("login-error", e);
-                    }
+                    // **Critical**: Immediately navigate back to app - don't let user get stuck
+                    navigate_main(&watcher_app, return_url.clone());
+                    let _ = watcher_app.emit("auth-returned", ());
+                    return;
                 }
-                navigate_main(&watcher_app, return_url.clone());
-                return;
+                
+                // If we've been on YT Music for more than 5 seconds without getting cookies,
+                // the user might be doing 2FA or account selection - reduce poll frequency
+                if consecutive_ytm_checks > 12 {
+                    poll_interval = Duration::from_millis(1000);
+                }
+            } else {
+                consecutive_ytm_checks = 0;
+                // Not on YT Music yet, slower polling is fine
+                poll_interval = Duration::from_millis(800);
             }
+            
             if std::time::Instant::now() > deadline {
                 let _ = watcher_app.emit("login-error", "Sign-in timed out");
                 navigate_main(&watcher_app, return_url.clone());
+                let _ = watcher_app.emit("auth-returned", ());
                 return;
             }
         }

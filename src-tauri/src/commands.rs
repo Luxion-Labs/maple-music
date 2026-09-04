@@ -1297,3 +1297,59 @@ mod tests {
         assert_eq!(row.title, played.title, "the song itself survives");
     }
 }
+
+/// Connect to Discord with a user or bot token (Android only).
+/// Desktop uses local IPC via discord.rs instead.
+#[tauri::command]
+pub async fn discord_connect(app: tauri::AppHandle, token: String) -> Result<String, String> {
+    #[cfg(target_os = "android")]
+    {
+        maple_discord_plugin::connect_with_token(&app, &token).await
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        Err("Discord Gateway connection is Android-only. Desktop uses local Discord IPC.".to_string())
+    }
+}
+
+/// Update Discord Rich Presence activity (Android only).
+#[tauri::command]
+pub async fn discord_update_activity(
+    app: tauri::AppHandle,
+    app_name: String,
+    application_id: String,
+    details: String,
+    state: String,
+    thumbnail: Option<String>,
+) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        let activity = maple_discord_plugin::DiscordActivity {
+            app_name,
+            application_id,
+            details,
+            state,
+            large_image: thumbnail,
+            small_image: None,
+        };
+        maple_discord_plugin::update_activity(&app, activity).await
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        // On desktop, this is handled by the existing discord.rs module
+        Ok(())
+    }
+}
+
+/// Disconnect from Discord (Android only).
+#[tauri::command]
+pub async fn discord_disconnect(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        maple_discord_plugin::disconnect(&app).await
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        Ok(())
+    }
+}

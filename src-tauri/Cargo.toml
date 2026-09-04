@@ -49,6 +49,8 @@ tauri-plugin-dialog = "2.7.2"
 tauri-plugin-window-state = "2.4.1"
 # Native Google account chooser on Android (backs `google_suggest_account`); no-op elsewhere.
 tauri-plugin-maple-google-auth = { path = "../crates/tauri-plugin-maple-google-auth" }
+# Discord Rich Presence plugin for Android Gateway connection
+tauri-plugin-maple-discord = { path = "../crates/tauri-plugin-maple-discord" }
 
 # Taskbar thumbnail toolbar (#47). Same `windows` version tauri-runtime-wry already pulls in, so
 # `Window::hwnd()` hands us a matching HWND.
