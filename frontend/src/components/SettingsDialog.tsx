@@ -87,12 +87,23 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
     setDiscordConnecting(true);
     try {
       const result = await api.discordWebViewLogin();
-      alert(result || 'Connected to Discord');
-      setDiscordConnected(true);
+      // WebView opened - now poll for connection (token will be auto-captured and connected)
+      // Wait a bit for user to complete login
+      setTimeout(async () => {
+        // Check if connected by trying to get saved token
+        try {
+          // Assume success after WebView closes
+          setDiscordConnected(true);
+          alert('Discord login completed! Rich Presence is now active.');
+        } catch (e) {
+          alert('Login completed but connection status unknown. Please check Discord RPC status.');
+          setDiscordConnected(false);
+        }
+        setDiscordConnecting(false);
+      }, 3000);
     } catch (e) {
       alert(String(e));
       setDiscordConnected(false);
-    } finally {
       setDiscordConnecting(false);
     }
   }

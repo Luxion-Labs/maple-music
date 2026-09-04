@@ -88,6 +88,10 @@ class DiscordWebViewActivity : AppCompatActivity() {
     }
 
     private fun finishWithToken(token: String) {
+        // Save token to shared prefs so plugin can pick it up
+        val prefs = getSharedPreferences("discord_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("discord_token", token).apply()
+        
         val intent = android.content.Intent().apply {
             putExtra(RESULT_TOKEN, token)
         }
