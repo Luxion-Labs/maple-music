@@ -41,9 +41,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("maple-discord")
         .setup(|app, api| {
             #[cfg(target_os = "android")]
-            let handle = api
-                .register_android_plugin(PLUGIN_IDENTIFIER, "DiscordRpcPlugin")
-                .ok();
+            let handle = api.register_android_plugin(PLUGIN_IDENTIFIER, "DiscordRpcPlugin").ok();
             #[cfg(not(target_os = "android"))]
             let handle: Option<PluginHandle<R>> = None;
 
@@ -60,10 +58,7 @@ pub async fn connect_with_token<R: Runtime>(
     token: &str,
 ) -> Result<String, String> {
     let state = app.state::<DiscordRpc<R>>();
-    let handle = state
-        .0
-        .as_ref()
-        .ok_or_else(|| "Discord RPC plugin not available".to_string())?;
+    let handle = state.0.as_ref().ok_or_else(|| "Discord RPC plugin not available".to_string())?;
 
     #[derive(Serialize)]
     struct ConnectArgs {
@@ -73,9 +68,7 @@ pub async fn connect_with_token<R: Runtime>(
     let response = handle
         .run_mobile_plugin_async::<ConnectResponse>(
             "connectWithToken",
-            ConnectArgs {
-                token: token.to_string(),
-            },
+            ConnectArgs { token: token.to_string() },
         )
         .await
         .map_err(|e| format!("Failed to connect: {}", e))?;
@@ -83,9 +76,7 @@ pub async fn connect_with_token<R: Runtime>(
     if response.success {
         Ok(response.message.unwrap_or_else(|| "Connected".to_string()))
     } else {
-        Err(response
-            .message
-            .unwrap_or_else(|| "Connection failed".to_string()))
+        Err(response.message.unwrap_or_else(|| "Connection failed".to_string()))
     }
 }
 
@@ -96,10 +87,7 @@ pub async fn update_activity<R: Runtime>(
     activity: DiscordActivity,
 ) -> Result<(), String> {
     let state = app.state::<DiscordRpc<R>>();
-    let handle = state
-        .0
-        .as_ref()
-        .ok_or_else(|| "Discord RPC plugin not available".to_string())?;
+    let handle = state.0.as_ref().ok_or_else(|| "Discord RPC plugin not available".to_string())?;
 
     handle
         .run_mobile_plugin_async::<()>("updateActivity", activity)
@@ -111,10 +99,7 @@ pub async fn update_activity<R: Runtime>(
 #[cfg(target_os = "android")]
 pub async fn disconnect<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     let state = app.state::<DiscordRpc<R>>();
-    let handle = state
-        .0
-        .as_ref()
-        .ok_or_else(|| "Discord RPC plugin not available".to_string())?;
+    let handle = state.0.as_ref().ok_or_else(|| "Discord RPC plugin not available".to_string())?;
 
     handle
         .run_mobile_plugin_async::<()>("disconnect", ())
