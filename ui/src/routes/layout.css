@@ -468,6 +468,15 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	/* Touch-action utilities for Android scrolling */
+	.touch-pan-y {
+		touch-action: pan-y;
+		-webkit-overflow-scrolling: touch;
+	}
+	.touch-pan-x {
+		touch-action: pan-x;
+		-webkit-overflow-scrolling: touch;
+	}
 	body {
 		/* Transparent, not bg-background: the window itself is transparent so the root container
 		   can paint rounded corners (see +layout.svelte). */
@@ -487,9 +496,21 @@
 		   viewport-defining element, which is <body> while <html> has visible overflow. Only 140+
 		   reads it off <html>, so on an older WebView2 the <html> rule alone is dead CSS. */
 		overscroll-behavior: none;
+		/* Android WebView scroll fixes */
+		-webkit-overflow-scrolling: touch;
+		touch-action: pan-y pan-x;
 	}
 	html {
 		@apply font-sans;
+		/* Android WebView height fix - prevent address bar issues */
+		height: 100%;
+		min-height: 100vh;
+		min-height: -webkit-fill-available;
+	}
+	body {
+		/* Match html height */
+		min-height: 100vh;
+		min-height: -webkit-fill-available;
 	}
 	img {
 		/* No artwork in this app is a drag payload: the drag sources for the shortcuts grid and the

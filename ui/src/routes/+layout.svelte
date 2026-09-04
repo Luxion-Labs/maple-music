@@ -110,9 +110,9 @@
 	<!-- The window itself is transparent; this root paints the background and, when not maximized,
 	     rounds the corners (the compositor can't round an undecorated window for us). -->
 	<div
-		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized && !chromeless
+		class="flex h-screen flex-col bg-background text-foreground {win.maximized && !chromeless
 			? ''
-			: 'rounded-lg'}"
+			: 'rounded-lg'} {chromeless ? '' : 'overflow-hidden'}"
 	>
 		{#if !chromeless}
 			<ResizeBorders />
@@ -149,11 +149,11 @@
 			</div>
 		{/if}
 		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
-		<div class="relative flex min-h-0 flex-1">
+		<div class="relative flex min-h-0 flex-1 {chromeless ? 'touch-pan-y' : ''}">
 			{#if !isMobile()}<Sidebar />{/if}
 			<!-- dragScroll: dragging a card up to home's Shortcuts grid has to be possible from anywhere in
 			     the feed, so aiming at the top edge scrolls this container while the drag is in flight. -->
-			<main class="min-w-0 flex-1 overflow-y-auto" {@attach dragScroll}>
+			<main class="min-w-0 flex-1 overflow-y-auto {chromeless ? 'touch-pan-y' : ''}" {@attach dragScroll}>
 				<!-- Remount the current page on sign-in/out so it refetches with the new account. -->
 				{#key auth.epoch}
 					{@render children()}

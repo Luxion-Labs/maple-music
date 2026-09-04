@@ -214,6 +214,42 @@
 		await api.setSetting('discord_rpc', settings.discord_rpc);
 	}
 
+	// Discord token management (Android only)
+	let discordToken = $state('');
+	let discordConnecting = $state(false);
+	let discordConnected = $state(false);
+	
+	async function connectDiscord() {
+		if (!discordToken.trim()) {
+			toast.error('Please enter a Discord token');
+			return;
+		}
+		discordConnecting = true;
+		try {
+			const result = await api.discordConnect(discordToken);
+			toast.success(result || 'Connected to Discord');
+			discordConnected = true;
+			// Save the connection state
+			await setDiscord(true);
+		} catch (e) {
+			toast.error(String(e));
+			discordConnected = false;
+		} finally {
+			discordConnecting = false;
+		}
+	}
+	
+	async function disconnectDiscord() {
+		try {
+			await api.discordDisconnect();
+			toast.success('Disconnected from Discord');
+			discordConnected = false;
+			await setDiscord(false);
+		} catch (e) {
+			toast.error(String(e));
+		}
+	}
+
 	async function setTray(on: boolean) {
 		settings.close_to_tray = on ? 'true' : 'false';
 		await api.setSetting('close_to_tray', settings.close_to_tray);
@@ -299,8 +335,7 @@
 						</div>
 						<Switch checked={historyOn} onCheckedChange={setHistory} />
 					</div>
-					<!-- Desktop-only OS integrations: there is no Discord app, tray or login session to
-					     hook on Android, so offering the switches would just be dead controls. -->
+					<!-- Desktop-only OS integrations for tray and autostart -->
 					{#if !isTouchDevice}
 						<div class="flex items-start justify-between gap-4 border-b py-3">
 							<div class="min-w-0">
@@ -330,6 +365,50 @@
 								</p>
 							</div>
 							<Switch checked={autostartOn} onCheckedChange={setAutostart} />
+						</div>
+					{/if}
+					<!-- Android Discord Rich Presence -->
+					{#if isTouchDevice}
+						<div class="flex flex-col gap-3 border-t pt-3">
+							<div class="min-w-0">
+								<div class="font-medium">Discord Rich Presence (Android)</div>
+								<p class="mt-0.5 text-sm text-muted-foreground">
+									Show what you're listening to on your Discord profile. Requires a Discord user or bot token.
+								</p>
+							</div>
+							{#if discordConnected}
+								<div class="flex items-center gap-2 rounded-md bg-green-500/10 px-3 py-2 text-sm text-green-600">
+									<span class="h-2 w-2 rounded-full bg-green-600"></span>
+									Connected to Discord
+								</div>
+								<Button variant="outline" size="sm" onclick={disconnectDiscord}>
+									Disconnect
+								</Button>
+							{:else}
+								<Input
+									type="password"
+									placeholder="Enter your Discord token"
+									bind:value={discordToken}
+									class="font-mono text-xs"
+								/>
+								<p class="text-xs text-muted-foreground">
+									Get your token from Discord Developer Portal or use the Discord mobile app method.
+									<a 
+										href="https://discord.com/developers/applications" 
+										target="_blank" 
+										class="text-primary hover:underline"
+									>
+										Discord Developer Portal
+									</a>
+								</p>
+								<Button 
+									size="sm" 
+									onclick={connectDiscord} 
+									disabled={discordConnecting || !discordToken.trim()}
+								>
+									{discordConnecting ? 'Connecting...' : 'Connect to Discord'}
+								</Button>
+							{/if}
 						</div>
 					{/if}
 				{:else if tab === 'themes'}

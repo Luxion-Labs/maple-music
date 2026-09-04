@@ -606,3 +606,24 @@ export const onLtState = (cb: (s: LtState) => void): Promise<UnlistenFn> =>
 	listen<LtState>('lt-state', (e) => cb(e.payload));
 export const onLtNotice = (cb: (msg: string) => void): Promise<UnlistenFn> =>
 	listen<string>('lt-notice', (e) => cb(e.payload));
+
+// --- Discord Rich Presence (Android only - desktop uses local IPC) --------------------------
+/** Connect to Discord Gateway with a user or bot token (Android only). */
+export const discordConnect = (token: string) => invoke<string>('discord_connect', { token });
+/** Update Discord activity/presence (Android only). */
+export const discordUpdateActivity = (
+	appName: string,
+	applicationId: string,
+	details: string,
+	state: string,
+	thumbnail?: string
+) =>
+	invoke<void>('discord_update_activity', {
+		appName,
+		applicationId,
+		details,
+		state,
+		thumbnail
+	});
+/** Disconnect from Discord (Android only). */
+export const discordDisconnect = () => invoke<void>('discord_disconnect');
