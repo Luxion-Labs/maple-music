@@ -131,7 +131,7 @@ function AppShell() {
   const desktop = !isMini && !mobile;
 
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden bg-background text-foreground', desktop && !maximized ? 'rounded-lg' : '')}>
+    <div className={cn('flex h-full flex-col bg-background text-foreground', desktop && 'overflow-hidden', desktop && !maximized ? 'rounded-lg' : '')}>
       {desktop && (
         <>
           <ResizeBorders />

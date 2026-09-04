@@ -104,6 +104,30 @@ pub async fn disconnect<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
         .map_err(|e| format!("Failed to disconnect: {}", e))
 }
 
+/// Open WebView login to auto-capture Discord token.
+#[cfg(target_os = "android")]
+pub async fn open_webview_login<R: Runtime>(app: &AppHandle<R>) -> Result<String, String> {
+    let state = app.state::<DiscordRpc<R>>();
+    let handle = state.0.as_ref().ok_or_else(|| "Discord RPC plugin not available".to_string())?;
+
+    #[derive(serde::Deserialize)]
+    struct WebViewResponse {
+        success: bool,
+        message: Option<String>,
+    }
+
+    let response = handle
+        .run_mobile_plugin_async::<WebViewResponse>("openWebViewLogin", ())
+        .await
+        .map_err(|e| format!("Failed to open login: {}", e))?;
+
+    if response.success {
+        Ok(response.message.unwrap_or_else(|| "Login successful".to_string()))
+    } else {
+        Err(response.message.unwrap_or_else(|| "Login failed".to_string()))
+    }
+}
+
 // Desktop stubs (Discord RPC handled by discord.rs on desktop)
 #[cfg(not(target_os = "android"))]
 pub async fn connect_with_token<R: Runtime>(
@@ -111,6 +135,11 @@ pub async fn connect_with_token<R: Runtime>(
     _token: &str,
 ) -> Result<String, String> {
     Err("Discord RPC via Gateway is Android-only. Desktop uses local IPC.".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+pub async fn open_webview_login<R: Runtime>(_app: &AppHandle<R>) -> Result<String, String> {
+    Err("Discord WebView login is Android-only. Desktop uses local IPC.".to_string())
 }
 
 #[cfg(not(target_os = "android"))]

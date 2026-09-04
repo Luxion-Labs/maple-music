@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-getSavedToken"
+description = "Enables the getSavedToken command without any pre-configured scope."
+commands.allow = ["getSavedToken"]
+
+[[permission]]
+identifier = "deny-getSavedToken"
+description = "Denies the getSavedToken command without any pre-configured scope."
+commands.deny = ["getSavedToken"]

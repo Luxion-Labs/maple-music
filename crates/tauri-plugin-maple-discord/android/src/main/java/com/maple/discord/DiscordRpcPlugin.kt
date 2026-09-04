@@ -36,6 +36,10 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
     private val tag = "MapleDiscordRpc"
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     
+    companion object {
+        private const val REQUEST_DISCORD_LOGIN = 9001
+    }
+    
     private val client = OkHttpClient.Builder()
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
@@ -47,6 +51,7 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
     private var currentToken: String = ""
     private var applicationId: String = "1540597943151763486"
     private var isConnected: Boolean = false
+    private var pendingWebViewInvoke: Invoke? = null
 
     private val prefs: SharedPreferences
         get() = activity.getSharedPreferences("maple_discord_prefs", Context.MODE_PRIVATE)
@@ -93,6 +98,15 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
                 invoke.resolve(result)
             }
         }
+    }
+
+    @Command
+    fun openWebViewLogin(invoke: Invoke) {
+        val intent = android.content.Intent(activity, DiscordWebViewActivity::class.java)
+        activity.startActivityForResult(intent, REQUEST_DISCORD_LOGIN)
+        
+        // Store the invoke to resolve later in onActivityResult
+        pendingWebViewInvoke = invoke
     }
 
     @Command
@@ -286,6 +300,49 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
             Log.d(tag, "Sent presence update")
         } catch (e: Exception) {
             Log.e(tag, "Failed to send presence update", e)
+        }
+    }
+
+    override fun onActivityResult(activity: AppCompatActivity, requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        super.onActivityResult(activity, requestCode, resultCode, data)
+        
+        if (requestCode == REQUEST_DISCORD_LOGIN && pendingWebViewInvoke != null) {
+            val invoke = pendingWebViewInvoke!!
+            pendingWebViewInvoke = null
+            
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                val token = data.getStringExtra(DiscordWebViewActivity.RESULT_TOKEN)
+                if (!token.isNullOrBlank()) {
+                    // Save and connect with the captured token
+                    prefs.edit().putString("discord_token", token).apply()
+                    currentToken = token
+                    
+                    scope.launch {
+                        try {
+                            connectToGateway(token)
+                            val result = JSObject()
+                            result.put("success", true)
+                            result.put("message", "Connected via Discord login")
+                            invoke.resolve(result)
+                        } catch (e: Exception) {
+                            val result = JSObject()
+                            result.put("success", false)
+                            result.put("message", e.message ?: "Connection failed")
+                            invoke.resolve(result)
+                        }
+                    }
+                } else {
+                    val result = JSObject()
+                    result.put("success", false)
+                    result.put("message", "No token captured")
+                    invoke.resolve(result)
+                }
+            } else {
+                val result = JSObject()
+                result.put("success", false)
+                result.put("message", "Login cancelled")
+                invoke.resolve(result)
+            }
         }
     }
 

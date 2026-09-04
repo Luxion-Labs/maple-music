@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-openWebViewLogin"
+description = "Enables the openWebViewLogin command without any pre-configured scope."
+commands.allow = ["openWebViewLogin"]
+
+[[permission]]
+identifier = "deny-openWebViewLogin"
+description = "Denies the openWebViewLogin command without any pre-configured scope."
+commands.deny = ["openWebViewLogin"]

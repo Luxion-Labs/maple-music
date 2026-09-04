@@ -381,6 +381,9 @@ export const ltRequestSync = () => invoke<void>('lt_request_sync');
 /** Connect to Discord Gateway with a user or bot token (Android only). */
 export const discordConnect = (token: string) => invoke<string>('discord_connect', { token });
 
+/** Open Discord WebView login to auto-capture token (Android only). */
+export const discordWebViewLogin = () => invoke<string>('discord_webview_login');
+
 /** Update Discord activity/presence (Android only). */
 export const discordUpdateActivity = (
   appName: string,

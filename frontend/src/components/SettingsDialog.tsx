@@ -83,6 +83,20 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   }
 
+  async function connectDiscordWebView() {
+    setDiscordConnecting(true);
+    try {
+      const result = await api.discordWebViewLogin();
+      alert(result || 'Connected to Discord');
+      setDiscordConnected(true);
+    } catch (e) {
+      alert(String(e));
+      setDiscordConnected(false);
+    } finally {
+      setDiscordConnecting(false);
+    }
+  }
+
   async function disconnectDiscord() {
     try {
       await api.discordDisconnect();
@@ -117,7 +131,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
                 <div>
                   <div className="font-medium">Discord Rich Presence</div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Show what you're listening to on your Discord profile. Requires a Discord token.
+                    Show what you're listening to on your Discord profile.
                   </p>
                 </div>
                 {discordConnected ? (
@@ -135,31 +149,48 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
                   </>
                 ) : (
                   <>
+                    <button
+                      onClick={connectDiscordWebView}
+                      disabled={discordConnecting}
+                      className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                    >
+                      {discordConnecting ? 'Connecting...' : '🔐 Login with Discord (Auto)'}
+                    </button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or use token</span>
+                      </div>
+                    </div>
+                    
                     <input
                       type="password"
-                      placeholder="Enter your Discord token"
+                      placeholder="Paste Discord token"
                       value={discordToken}
                       onChange={(e) => setDiscordToken(e.target.value)}
                       className="rounded-lg border bg-background px-3 py-2 font-mono text-xs"
                     />
+                    <button
+                      onClick={connectDiscord}
+                      disabled={discordConnecting || !discordToken.trim()}
+                      className="rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
+                    >
+                      {discordConnecting ? 'Connecting...' : 'Connect with Token'}
+                    </button>
                     <p className="text-xs text-muted-foreground">
-                      Get your token from{' '}
+                      Get token from{' '}
                       <a
                         href="https://discord.com/developers/applications"
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline"
                       >
-                        Discord Developer Portal
+                        Developer Portal
                       </a>
                     </p>
-                    <button
-                      onClick={connectDiscord}
-                      disabled={discordConnecting || !discordToken.trim()}
-                      className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
-                    >
-                      {discordConnecting ? 'Connecting...' : 'Connect to Discord'}
-                    </button>
                   </>
                 )}
               </div>

@@ -10,6 +10,32 @@
 <tr>
 <td>
 
+`maple-discord:allow-connectWithToken`
+
+</td>
+<td>
+
+Enables the connectWithToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:deny-connectWithToken`
+
+</td>
+<td>
+
+Denies the connectWithToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `maple-discord:allow-connect-with-token`
 
 </td>
@@ -62,6 +88,32 @@ Denies the disconnect command without any pre-configured scope.
 <tr>
 <td>
 
+`maple-discord:allow-getSavedToken`
+
+</td>
+<td>
+
+Enables the getSavedToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:deny-getSavedToken`
+
+</td>
+<td>
+
+Denies the getSavedToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `maple-discord:allow-get-saved-token`
 
 </td>
@@ -88,6 +140,58 @@ Denies the get_saved_token command without any pre-configured scope.
 <tr>
 <td>
 
+`maple-discord:allow-openWebViewLogin`
+
+</td>
+<td>
+
+Enables the openWebViewLogin command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:deny-openWebViewLogin`
+
+</td>
+<td>
+
+Denies the openWebViewLogin command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:allow-saveToken`
+
+</td>
+<td>
+
+Enables the saveToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:deny-saveToken`
+
+</td>
+<td>
+
+Denies the saveToken command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `maple-discord:allow-save-token`
 
 </td>
@@ -107,6 +211,32 @@ Enables the save_token command without any pre-configured scope.
 <td>
 
 Denies the save_token command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:allow-updateActivity`
+
+</td>
+<td>
+
+Enables the updateActivity command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`maple-discord:deny-updateActivity`
+
+</td>
+<td>
+
+Denies the updateActivity command without any pre-configured scope.
 
 </td>
 </tr>

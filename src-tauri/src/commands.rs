@@ -1316,6 +1316,19 @@ pub async fn discord_connect(app: tauri::AppHandle, token: String) -> Result<Str
     }
 }
 
+/// Open Discord WebView login to auto-capture token (Android only).
+#[tauri::command]
+pub async fn discord_webview_login(app: tauri::AppHandle) -> Result<String, String> {
+    #[cfg(target_os = "android")]
+    {
+        maple_discord_plugin::open_webview_login(&app).await
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        Err("Discord WebView login is Android-only.".to_string())
+    }
+}
+
 /// Update Discord Rich Presence activity (Android only).
 #[tauri::command]
 pub async fn discord_update_activity(

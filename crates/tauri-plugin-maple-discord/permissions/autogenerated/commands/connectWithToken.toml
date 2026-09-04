@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-connectWithToken"
+description = "Enables the connectWithToken command without any pre-configured scope."
+commands.allow = ["connectWithToken"]
+
+[[permission]]
+identifier = "deny-connectWithToken"
+description = "Denies the connectWithToken command without any pre-configured scope."
+commands.deny = ["connectWithToken"]

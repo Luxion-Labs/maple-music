@@ -496,6 +496,7 @@ pub fn run() {
             commands::open_external,
             // Discord integration (Android only - desktop uses discord.rs local IPC)
             commands::discord_connect,
+            commands::discord_webview_login,
             commands::discord_update_activity,
             commands::discord_disconnect,
         ])

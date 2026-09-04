@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the connectWithToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-connectWithToken",
+          "markdownDescription": "Enables the connectWithToken command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the connectWithToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-connectWithToken",
+          "markdownDescription": "Denies the connectWithToken command without any pre-configured scope."
+        },
+        {
           "description": "Enables the connect_with_token command without any pre-configured scope.",
           "type": "string",
           "const": "allow-connect-with-token",
@@ -319,6 +331,18 @@
           "markdownDescription": "Denies the disconnect command without any pre-configured scope."
         },
         {
+          "description": "Enables the getSavedToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-getSavedToken",
+          "markdownDescription": "Enables the getSavedToken command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the getSavedToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-getSavedToken",
+          "markdownDescription": "Denies the getSavedToken command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_saved_token command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-saved-token",
@@ -331,6 +355,30 @@
           "markdownDescription": "Denies the get_saved_token command without any pre-configured scope."
         },
         {
+          "description": "Enables the openWebViewLogin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-openWebViewLogin",
+          "markdownDescription": "Enables the openWebViewLogin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the openWebViewLogin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-openWebViewLogin",
+          "markdownDescription": "Denies the openWebViewLogin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the saveToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-saveToken",
+          "markdownDescription": "Enables the saveToken command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the saveToken command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-saveToken",
+          "markdownDescription": "Denies the saveToken command without any pre-configured scope."
+        },
+        {
           "description": "Enables the save_token command without any pre-configured scope.",
           "type": "string",
           "const": "allow-save-token",
@@ -341,6 +389,18 @@
           "type": "string",
           "const": "deny-save-token",
           "markdownDescription": "Denies the save_token command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the updateActivity command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-updateActivity",
+          "markdownDescription": "Enables the updateActivity command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the updateActivity command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-updateActivity",
+          "markdownDescription": "Denies the updateActivity command without any pre-configured scope."
         },
         {
           "description": "Enables the update_activity command without any pre-configured scope.",

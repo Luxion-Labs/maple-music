@@ -1,10 +1,11 @@
 fn main() {
     tauri_plugin::Builder::new(&[
-        "connect_with_token",
-        "update_activity",
+        "connectWithToken",
+        "openWebViewLogin",
+        "updateActivity",
         "disconnect",
-        "save_token",
-        "get_saved_token",
+        "saveToken",
+        "getSavedToken",
     ])
     .android_path("android")
     .build();
