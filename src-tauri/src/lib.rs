@@ -206,11 +206,14 @@ pub fn run() {
                     .build(),
             );
     }
+    
+    let builder = builder.plugin(maple_google_auth_plugin::init());
+    
+    // Discord Rich Presence plugin for Android (desktop uses local IPC via discord.rs)
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(maple_discord_plugin::init());
+    
     builder
-        .plugin(maple_google_auth_plugin::init())
-        // Discord Rich Presence plugin for Android (desktop uses local IPC via discord.rs)
-        #[cfg(target_os = "android")]
-        .plugin(maple_discord_plugin::init())
         .setup(|app| {
             let handle = app.handle().clone();
 
