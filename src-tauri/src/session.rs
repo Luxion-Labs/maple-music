@@ -139,7 +139,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
 
     // Store return intent for lifecycle resume
     let _ = app.emit("auth-navigating-away", ());
-    
+
     let watcher_app = app.clone();
     tauri::async_runtime::spawn(async move {
         // Extended timeout: 12 minutes to handle slow 2FA, but with active polling so we return
@@ -147,16 +147,16 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
         let deadline = std::time::Instant::now() + Duration::from_secs(720);
         let mut poll_interval = Duration::from_millis(500); // Start with fast polling
         let mut consecutive_ytm_checks = 0;
-        
+
         loop {
             tokio::time::sleep(poll_interval).await;
             let (on_ytm, cookies) = main_webview_state(&watcher_app).await;
-            
+
             if on_ytm {
                 consecutive_ytm_checks += 1;
                 // We're on YouTube Music - check cookies more frequently
                 poll_interval = Duration::from_millis(400);
-                
+
                 if innertube::cookie_sapisid(&cookies).is_some() {
                     // Success! We have auth cookies
                     match state.sign_in(cookies).await {
@@ -177,7 +177,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
                     let _ = watcher_app.emit("auth-returned", ());
                     return;
                 }
-                
+
                 // If we've been on YT Music for more than 5 seconds without getting cookies,
                 // the user might be doing 2FA or account selection - reduce poll frequency
                 if consecutive_ytm_checks > 12 {
@@ -188,7 +188,7 @@ pub fn open_login(app: AppHandle, state: Arc<AppState>, hint: Option<&str>) {
                 // Not on YT Music yet, slower polling is fine
                 poll_interval = Duration::from_millis(800);
             }
-            
+
             if std::time::Instant::now() > deadline {
                 let _ = watcher_app.emit("login-error", "Sign-in timed out");
                 navigate_main(&watcher_app, return_url.clone());

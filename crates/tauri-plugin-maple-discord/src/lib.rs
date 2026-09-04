@@ -6,15 +6,12 @@
 
 use serde::{Deserialize, Serialize};
 use tauri::{
-    plugin::{Builder, TauriPlugin},
+    plugin::{Builder, PluginHandle, TauriPlugin},
     AppHandle, Manager, Runtime,
 };
 
 #[cfg(target_os = "android")]
 const PLUGIN_IDENTIFIER: &str = "com.maple.discord";
-
-#[cfg(target_os = "android")]
-use tauri::plugin::PluginHandle;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiscordActivity {
@@ -39,7 +36,7 @@ struct ConnectResponse {
 /// Initialize the Discord RPC plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("maple-discord")
-        .setup(|app, api| {
+        .setup(|_app, api| {
             #[cfg(target_os = "android")]
             let handle = api.register_android_plugin(PLUGIN_IDENTIFIER, "DiscordRpcPlugin").ok();
             #[cfg(not(target_os = "android"))]

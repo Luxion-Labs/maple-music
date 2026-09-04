@@ -1308,7 +1308,8 @@ pub async fn discord_connect(app: tauri::AppHandle, token: String) -> Result<Str
     }
     #[cfg(not(target_os = "android"))]
     {
-        Err("Discord Gateway connection is Android-only. Desktop uses local Discord IPC.".to_string())
+        Err("Discord Gateway connection is Android-only. Desktop uses local Discord IPC."
+            .to_string())
     }
 }
 
