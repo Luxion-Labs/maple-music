@@ -115,6 +115,7 @@ struct SelectedIdentity {
     has_multiple_identities: bool,
 }
 
+#[derive(Debug)]
 pub enum SignInOutcome {
     Complete,
     SelectionRequired,

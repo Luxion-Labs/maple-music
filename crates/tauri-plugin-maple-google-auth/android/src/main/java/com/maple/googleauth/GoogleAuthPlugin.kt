@@ -24,16 +24,17 @@ import com.google.android.gms.common.api.ApiException
  */
 @TauriPlugin
 class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
-    // Web Application OAuth client ID (Google Cloud Console). Public client identifier — safe to
-    // ship in the app; it only identifies the client to Google's account chooser.
-    private val serverClientId =
-        "863073010017-7hjv9bdptpuleevj0h8g1r02eoic8kjb.apps.googleusercontent.com"
+    // The chooser only needs the account email (to preselect it in the sign-in webview), never a
+    // Google ID token, so we deliberately do NOT call `requestIdToken(...)`. An OAuth web client ID
+    // must be registered against the app's package + signing-cert SHA-1 in the Google Cloud
+    // Console, and when it isn't, `getSignedInAccountFromIntent` throws DEVELOPER_ERROR (status 10)
+    // and the whole picker fails. Plain DEFAULT_SIGN_IN + email has no such dependency and works on
+    // any package/signing config.
 
     @Command
     fun suggestAccount(invoke: Invoke) {
         try {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(serverClientId)
                 .requestEmail()
                 .build()
             val client: GoogleSignInClient = GoogleSignIn.getClient(activity, gso)

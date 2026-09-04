@@ -122,6 +122,15 @@ pub(crate) fn tune_webview_labelled(app: &tauri::AppHandle, label: &str) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Install a rustls crypto provider before any `reqwest::Client` / TLS handshake can be
+    // built. reqwest is compiled with `rustls-no-provider`, so a provider must be installed
+    // process-wide first or every client creation panics:
+    // "No rustls crypto provider is configured … install a crypto provider before building a Client."
+    // Desktop used to get away with this because Listen Together (listentogether/mod.rs) installs
+    // the ring provider at init, and usually ran before the first client was built; on Android that
+    // ordering isn't guaranteed, so the panic fired on the very first InnerTube/reqwest client.
+    // It is idempotent, so the later install in listentogether is harmless.
+    let _ = rustls::crypto::ring::default_provider().install_default();
     // NVIDIA + Wayland: WebKitGTK's DMABUF renderer trips over NVIDIA's explicit
     // sync (GBM buffer failures / blank window / Gdk Error 71). Disabling explicit
     // sync keeps hardware-accelerated rendering, unlike the old
@@ -593,22 +602,19 @@ fn spawn_event_pump(
             match ev {
                 PlayerEvent::Position(p) => {
                     if throttle.should_emit(p, std::time::Instant::now()) {
-                        let _ = app.emit("position", serde_json::json!({ "position": p }));
+                        let _ = app.emit("position", p);
                     }
                     state.on_position(p).await;
                 }
                 PlayerEvent::Duration(d) => {
-                    let _ = app.emit("duration", serde_json::json!({ "duration": d }));
+                    let _ = app.emit("duration", d);
                     state.on_duration(d).await;
                 }
                 PlayerEvent::Playing(playing) => {
                     let _ = app.emit("playback-state", if playing { "playing" } else { "paused" });
                     if !playing {
                         state.flush_position(); // persist exact resume position on pause
-                        let _ = app.emit(
-                            "position",
-                            serde_json::json!({ "position": state.current_position() }),
-                        );
+                        let _ = app.emit("position", state.current_position());
                     }
                     state.media_set_playing(playing);
                     // Keep the tray's toggle label honest — this arm is the same chokepoint
