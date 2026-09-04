@@ -2626,6 +2626,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-dialog",
+ "tauri-plugin-maple-discord",
  "tauri-plugin-maple-google-auth",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
@@ -4950,6 +4951,15 @@ dependencies = [
  "thiserror 2.0.18",
  "toml 1.1.2+spec-1.1.0",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-maple-discord"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]

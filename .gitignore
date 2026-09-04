@@ -32,3 +32,4 @@ scripts/bench.sh
 # Downloaded Android build artifacts (APKs placed at repo root for transfer)
 /maple-mobile.apk
 /maple-arm64-aligned.apk
+alpha/
