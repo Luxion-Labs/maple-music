@@ -1,6 +1,7 @@
 package com.maple.discord
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log

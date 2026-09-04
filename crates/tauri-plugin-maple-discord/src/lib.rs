@@ -122,7 +122,9 @@ pub async fn open_webview_login<R: Runtime>(app: &AppHandle<R>) -> Result<String
         .map_err(|e| format!("Failed to open login: {}", e))?;
 
     if response.success {
-        Ok(response.message.unwrap_or_else(|| "WebView opened. Complete login in the browser.".to_string()))
+        Ok(response
+            .message
+            .unwrap_or_else(|| "WebView opened. Complete login in the browser.".to_string()))
     } else {
         Err(response.message.unwrap_or_else(|| "Failed to open WebView".to_string()))
     }
