@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation("app.tauri:tauri-android:2.0.10")
+    implementation(project(":tauri-android"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.webkit:webkit:1.14.0")
