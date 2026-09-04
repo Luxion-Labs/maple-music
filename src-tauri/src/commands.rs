@@ -11,6 +11,9 @@ use tauri::{Emitter, State};
 
 use crate::state::{AppState, ON_REPEAT_ID, ON_REPEAT_LIMIT, ON_REPEAT_WINDOW_SECS};
 
+// Discord RPC plugin
+use tauri_plugin_maple_discord as maple_discord_plugin;
+
 type St<'a> = State<'a, Arc<AppState>>;
 
 #[tauri::command]
