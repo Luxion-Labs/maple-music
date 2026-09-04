@@ -377,4 +377,27 @@ export const ltApproveSuggestion = (id: string) => invoke<void>('lt_approve_sugg
 export const ltRejectSuggestion = (id: string) => invoke<void>('lt_reject_suggestion', { id });
 export const ltRequestSync = () => invoke<void>('lt_request_sync');
 
+// ---- Discord Rich Presence (Android only - desktop uses local IPC) ----
+/** Connect to Discord Gateway with a user or bot token (Android only). */
+export const discordConnect = (token: string) => invoke<string>('discord_connect', { token });
+
+/** Update Discord activity/presence (Android only). */
+export const discordUpdateActivity = (
+  appName: string,
+  applicationId: string,
+  details: string,
+  state: string,
+  thumbnail?: string
+) =>
+  invoke<void>('discord_update_activity', {
+    appName,
+    applicationId,
+    details,
+    state,
+    thumbnail,
+  });
+
+/** Disconnect from Discord (Android only). */
+export const discordDisconnect = () => invoke<void>('discord_disconnect');
+
 export { isTauri };

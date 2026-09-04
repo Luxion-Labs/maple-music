@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -11,6 +12,7 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -147,8 +149,6 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
         val gatewayUrl = "wss://gateway.discord.gg/?v=10&encoding=json"
         val request = Request.Builder().url(gatewayUrl).build()
 
-        val (responseChan, _) = Channel<Result<Unit>>(1) to Channel<Unit>(1)
-
         activeWebSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(tag, "Gateway WebSocket opened")
@@ -161,7 +161,6 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(tag, "Gateway connection error: ${t.message}")
                 isConnected = false
-                responseChan.trySend(Result.failure(t))
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -290,7 +289,7 @@ class DiscordRpcPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    override fun onDestroy(activity: Activity?) {
+    override fun onDestroy(activity: AppCompatActivity) {
         super.onDestroy(activity)
         scope.cancel()
         heartbeatJob?.cancel()

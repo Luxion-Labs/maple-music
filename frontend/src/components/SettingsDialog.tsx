@@ -31,6 +31,11 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
   const [clearing, setClearing] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // Discord state (Android only)
+  const [discordToken, setDiscordToken] = useState('');
+  const [discordConnecting, setDiscordConnecting] = useState(false);
+  const [discordConnected, setDiscordConnected] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     setLoaded(false);
@@ -63,6 +68,31 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
     try { if (api.isTauri) await api.clearCaches(); } finally { setClearing(false); }
   }
 
+  async function connectDiscord() {
+    if (!discordToken.trim()) return;
+    setDiscordConnecting(true);
+    try {
+      const result = await api.discordConnect(discordToken);
+      alert(result || 'Connected to Discord');
+      setDiscordConnected(true);
+    } catch (e) {
+      alert(String(e));
+      setDiscordConnected(false);
+    } finally {
+      setDiscordConnecting(false);
+    }
+  }
+
+  async function disconnectDiscord() {
+    try {
+      await api.discordDisconnect();
+      alert('Disconnected from Discord');
+      setDiscordConnected(false);
+    } catch (e) {
+      alert(String(e));
+    }
+  }
+
   const quality = settings.quality ?? 'HIGH';
   const historyOn = settings.enable_history !== 'false';
   const autoplayOn = settings.autoplay !== 'false';
@@ -80,6 +110,60 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
         return (
           <>
             <Row label="Watch history" desc="Register plays in YouTube Music history." end={<Switch checked={historyOn} onChange={(v) => set('enable_history', v ? 'true' : 'false')} />} />
+            
+            {/* Discord Rich Presence (Android only) */}
+            {mobile && (
+              <div className="flex flex-col gap-3 border-t pt-3 mt-3">
+                <div>
+                  <div className="font-medium">Discord Rich Presence</div>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Show what you're listening to on your Discord profile. Requires a Discord token.
+                  </p>
+                </div>
+                {discordConnected ? (
+                  <>
+                    <div className="flex items-center gap-2 rounded-md bg-green-500/10 px-3 py-2 text-sm text-green-600">
+                      <span className="h-2 w-2 rounded-full bg-green-600" />
+                      Connected to Discord
+                    </div>
+                    <button
+                      onClick={disconnectDiscord}
+                      className="rounded-lg border px-3 py-2 text-sm hover:bg-muted"
+                    >
+                      Disconnect
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="password"
+                      placeholder="Enter your Discord token"
+                      value={discordToken}
+                      onChange={(e) => setDiscordToken(e.target.value)}
+                      className="rounded-lg border bg-background px-3 py-2 font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Get your token from{' '}
+                      <a
+                        href="https://discord.com/developers/applications"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Discord Developer Portal
+                      </a>
+                    </p>
+                    <button
+                      onClick={connectDiscord}
+                      disabled={discordConnecting || !discordToken.trim()}
+                      className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                    >
+                      {discordConnecting ? 'Connecting...' : 'Connect to Discord'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </>
         );
       case 'themes':
