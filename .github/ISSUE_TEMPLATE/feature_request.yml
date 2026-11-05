@@ -1,20 +1,22 @@
-name: Idea or request
-description: Something you wish Maple did.
-labels: [enhancement]
+name: Feature Request
+description: Propose a new feature or improvement
+title: "feat: "
+labels: ["enhancement"]
 body:
-  - type: textarea
-    id: idea
+  - type: markdown
     attributes:
-      label: What would you like Maple to do?
-      description: >
-        Rough is fine. If it is easier to say what annoys you today than to
-        describe the fix, say that instead.
-      placeholder: I would like the queue to survive a restart, I lose it every time I close the app.
+      value: Share your proposal for improving this project.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
     validations:
       required: true
-
   - type: textarea
-    id: extra
+    id: solution
     attributes:
-      label: Anything else?
-      description: Optional. Screenshots, sketches, or another app that already does this well.
+      label: Proposed Solution
+      description: Detailed description of what you want to happen.
+    validations:
+      required: true
