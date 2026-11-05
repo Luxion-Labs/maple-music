@@ -193,16 +193,5 @@ this project belong to their respective owners.
 
 ---
 
-## License
-
-[GPL-3.0](LICENSE)
-
-
-
----
-
 ## Maintainer Response SLA
 Luxion Labs enforces a strict 24-hour response SLA on all community issues, feature proposals, and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
-
-## License
-See [LICENSE](LICENSE) for details.
