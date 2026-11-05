@@ -88,6 +88,10 @@ Features
 
 Both live in the title bar, next to the window controls.
 
+<details>
+<summary><b>Expand Scrobbling & Discord Details</b></summary>
+<br/>
+
 - **Last.fm**  -  click the Last.fm mark, approve Maple in the browser tab that
   opens, and you're connected for good. Tracks scrobble at the halfway point (or
   four minutes, whichever comes first), which is Last.fm's own rule. Click again
@@ -110,11 +114,18 @@ reports that it isn't configured.
 
 ---
 
+<br/>
+</details>
+
 ## Lyrics
 
 Open the panel with the microphone button in the player bar, next to the queue
 button. It takes the same side of the window as the queue, so opening one closes
 the other.
+
+<details>
+<summary><b>Expand Lyrics Details</b></summary>
+<br/>
 
 Lyrics come from [Boidu](https://boidu.dev) first, then
 [LRCLIB](https://lrclib.net), then YouTube Music's own timed lyrics, then
@@ -135,11 +146,18 @@ entirely in some countries  -  where that's the case, LRCLIB does all the work.
 
 ---
 
+<br/>
+</details>
+
 ## Listen Together
 
 Synced listening with friends. Everyone streams their own audio from YouTube;
 the room only relays play/pause, seeks, track changes and the queue. One person
 hosts the relay:
+
+<details>
+<summary><b>Expand Listen Together Details</b></summary>
+<br/>
 
 ```bash
 cargo run -p sync-server        # plain WebSocket on 0.0.0.0:8080
@@ -152,9 +170,16 @@ suggestion.
 
 ---
 
+<br/>
+</details>
+
 ## Building from Source
 
 Fedora:
+
+<details>
+<summary><b>Expand Building from Source Details</b></summary>
+<br/>
 
 ```bash
 sudo dnf install mpv-libs mpv-libs-devel webkit2gtk4.1-devel \
@@ -166,6 +191,9 @@ cargo tauri build
 Windows and macOS instructions live in [docs/BUILD-PLATFORMS.md](docs/BUILD-PLATFORMS.md).
 
 ---
+
+<br/>
+</details>
 
 ## How It Works, Briefly
 
@@ -180,7 +208,14 @@ Windows and macOS instructions live in [docs/BUILD-PLATFORMS.md](docs/BUILD-PLAT
 - The UI is a SvelteKit SPA that only ever talks to the Rust core. It never
   contacts YouTube itself.
 
+<details>
+<summary><b>Expand How It Works, Briefly Details</b></summary>
+<br/>
+
 ---
+
+<br/>
+</details>
 
 ## Disclaimer
 
