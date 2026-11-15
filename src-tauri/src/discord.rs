@@ -625,7 +625,7 @@ mod tests {
         );
     }
 
-    fn track(id: &str) -> Box<Track> {
+    pub(super) fn track(id: &str) -> Box<Track> {
         Box::new(Track {
             video_id: id.into(),
             title: "t".into(),
@@ -635,7 +635,7 @@ mod tests {
         })
     }
 
-    fn playing(id: &str, pos: f64) -> Presence {
+    pub(super) fn playing(id: &str, pos: f64) -> Presence {
         let mut p = Presence::new(true);
         p.apply(Msg::Track(track(id)));
         p.apply(Msg::Playing(true));

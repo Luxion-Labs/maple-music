@@ -29,7 +29,8 @@ use innertube::{Clients, InnerTube, Locale, Session};
 use player::{Player, PlayerEvent};
 use tauri::{Emitter, Manager};
 
-// Discord RPC plugin
+// Discord RPC plugin (kept for future Discord integration)
+#[allow(unused_imports)]
 use tauri_plugin_maple_discord as maple_discord_plugin;
 
 use cipher::{CipherDeobfuscator, PlayerConfigStore};
