@@ -831,34 +831,34 @@ mod tests {
     /// must be ignored, not applied — the new track's artwork must not be replaced by the old one's.
     #[test]
     fn stale_artwork_is_rejected() {
-    let mut p = playing("LOCAL:/music/old.mp3", 30.0);
-    p.duration = 200.0;
-    p.track.as_mut().unwrap().thumbnail = None; // no artwork yet
+        let mut p = playing("LOCAL:/music/old.mp3", 30.0);
+        p.duration = 200.0;
+        p.track.as_mut().unwrap().thumbnail = None; // no artwork yet
 
-    // Upload completes for "old"
-    p.apply(Msg::ArtworkReady {
-        video_id: "LOCAL:/music/old.mp3".into(),
-        url: "https://storage.example.com/old.jpg".into(),
-    });
-    assert_eq!(
-        p.track.as_ref().unwrap().thumbnail.as_deref(),
-        Some("https://storage.example.com/old.jpg"),
-        "matching video_id: artwork applied"
-    );
+        // Upload completes for "old"
+        p.apply(Msg::ArtworkReady {
+            video_id: "LOCAL:/music/old.mp3".into(),
+            url: "https://storage.example.com/old.jpg".into(),
+        });
+        assert_eq!(
+            p.track.as_ref().unwrap().thumbnail.as_deref(),
+            Some("https://storage.example.com/old.jpg"),
+            "matching video_id: artwork applied"
+        );
 
-    // User skips to a new track before the old upload finished sending the message
-    p.apply(Msg::Track(track("LOCAL:/music/new.mp3")));
-    p.track.as_mut().unwrap().thumbnail = None;
+        // User skips to a new track before the old upload finished sending the message
+        p.apply(Msg::Track(track("LOCAL:/music/new.mp3")));
+        p.track.as_mut().unwrap().thumbnail = None;
 
-    // The old artwork message arrives
-    p.apply(Msg::ArtworkReady {
-        video_id: "LOCAL:/music/old.mp3".into(),
-        url: "https://storage.example.com/old.jpg".into(),
-    });
-    assert_eq!(
-        p.track.as_ref().unwrap().thumbnail,
-        None,
-        "stale video_id: artwork ignored, new track's None preserved"
-    );
+        // The old artwork message arrives
+        p.apply(Msg::ArtworkReady {
+            video_id: "LOCAL:/music/old.mp3".into(),
+            url: "https://storage.example.com/old.jpg".into(),
+        });
+        assert_eq!(
+            p.track.as_ref().unwrap().thumbnail,
+            None,
+            "stale video_id: artwork ignored, new track's None preserved"
+        );
     }
 }
