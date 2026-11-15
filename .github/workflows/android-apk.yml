@@ -27,10 +27,10 @@ name: Android APK
 #      sysroot or it parses quickjs.h against host headers and produces wrong-size bindings.
 
 on:
-  push:
-    branches: [main]
-    # Docs and the marketing site don't change the app — don't burn a 10-minute build on them.
-    paths-ignore: ["website/**", "**/*.md", "assets/**"]
+  # Temporarily disabled - Android builds not needed right now
+  # push:
+  #   branches: [main]
+  #   paths-ignore: ["website/**", "**/*.md", "assets/**"]
   workflow_dispatch:
 
 permissions:

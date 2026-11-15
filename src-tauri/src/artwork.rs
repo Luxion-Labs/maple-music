@@ -110,25 +110,25 @@ impl ArtworkConfig {
     pub fn from_db(db: &Db) -> Option<Self> {
         // Try database first (allows user override)
         if let Some(function_url) = db.get_setting("neon_artwork_url").filter(|u| !u.is_empty()) {
-            if let Some(upload_token) = db.get_setting("neon_artwork_token").filter(|t| !t.is_empty()) {
+            if let Some(upload_token) =
+                db.get_setting("neon_artwork_token").filter(|t| !t.is_empty())
+            {
                 return Some(Self { function_url, upload_token });
             }
         }
-        
+
         // Fallback to built-in credentials (set at compile time)
         Self::default_config()
     }
-    
+
     /// Default configuration compiled into the binary
     /// Set via environment variables during build: NEON_ARTWORK_URL and NEON_ARTWORK_TOKEN
     fn default_config() -> Option<Self> {
-        let function_url = option_env!("NEON_ARTWORK_URL")
-            .map(|s| s.to_string())
-            .filter(|s| !s.is_empty())?;
-        let upload_token = option_env!("NEON_ARTWORK_TOKEN")
-            .map(|s| s.to_string())
-            .filter(|s| !s.is_empty())?;
-        
+        let function_url =
+            option_env!("NEON_ARTWORK_URL").map(|s| s.to_string()).filter(|s| !s.is_empty())?;
+        let upload_token =
+            option_env!("NEON_ARTWORK_TOKEN").map(|s| s.to_string()).filter(|s| !s.is_empty())?;
+
         Some(Self { function_url, upload_token })
     }
 
