@@ -1,5 +1,5 @@
 [build]
-jobs = 1
+jobs = 6
 
 [env]
 GDK_BACKEND = "x11"

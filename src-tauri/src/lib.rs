@@ -1,5 +1,6 @@
 //! Maple Tauri app. Wires transport + player + db + orchestrator behind the command boundary.
 
+mod artwork;
 mod cipher;
 mod commands;
 mod db;

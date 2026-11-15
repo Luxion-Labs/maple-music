@@ -29,6 +29,15 @@ rustypipe_reports/
 scripts/bench.sh
 
 .codegraph
+.neon
+node_modules/
+.env.local
+
+# Neon Functions
+neon-functions/node_modules/
+neon-functions/.env
+neon-functions/.env.local
+hello.ts
 
 # Downloaded Android build artifacts (APKs placed at repo root for transfer)
 /maple-mobile.apk
