@@ -4,20 +4,20 @@ name: Windows release binaries
 # and adds the `windows-x86_64` entry to latest.json so Windows installs get auto-updates.
 #
 # `scripts/release.sh` on Fedora creates the GitHub release and its .rpm. Publishing it fires this
-# workflow automatically — a few minutes later the Windows assets appear on the same release. Nobody
+# workflow automatically â€” a few minutes later the Windows assets appear on the same release. Nobody
 # boots Windows. The Linux AppImage is built the same way, by linux-release.yml.
 #
 # It can also be run by hand against an older tag to backfill:
-#   Actions ▸ Windows release binaries ▸ Run workflow ▸ tag = v0.1.4
+#   Actions â–¸ Windows release binaries â–¸ Run workflow â–¸ tag = v0.1.4
 #
-# Requires repo secrets (Settings ▸ Secrets and variables ▸ Actions):
+# Requires repo secrets (Settings â–¸ Secrets and variables â–¸ Actions):
 #   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/maple.key
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  empty string (the key has no password)
-#   LASTFM_API_KEY / LASTFM_API_SECRET  Last.fm credentials (optional — warn-only if absent)
+#   LASTFM_API_KEY / LASTFM_API_SECRET  Last.fm credentials (optional â€” warn-only if absent)
 # Without the signing pair the bundler emits no .sig and this job fails loudly rather than
 # shipping an unsignable update.
 
-# DISPATCH ONLY, ON PURPOSE — do not add `release: published` back. Actions caches are ref-scoped,
+# DISPATCH ONLY, ON PURPOSE â€” do not add `release: published` back. Actions caches are ref-scoped,
 # and a release-triggered run executes on the *tag* ref, so it can never read the cache any previous
 # release wrote. This job was recompiling all of Rust from scratch every single time, 11m25s of a
 # 15m run, while dutifully saving a 0.55 GB cache nothing would ever read. A dispatched run executes
@@ -47,10 +47,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Pinned libmpv dev build (shinchiro). Baseline x86_64 — NOT the `-v3-` variant, which requires
+  # Pinned libmpv dev build (shinchiro). Baseline x86_64 â€” NOT the `-v3-` variant, which requires
   # AVX2 and would crash on older CPUs. libmpv2 needs mpv >= 0.35 (client API 2.x). Bump
   # deliberately: a new mpv is a new 117 MB DLL in the installer.
-  MPV_DEV_URL: https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20260610/mpv-dev-x86_64-20260610-git-304426c.7z
+  MPV_DEV_URL: https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20261111/mpv-dev-x86_64-20261111-git-bcde6b93cc.7z
   MPV_DIR: ${{ github.workspace }}\.libmpv
 
 jobs:
@@ -81,20 +81,20 @@ jobs:
 
       # The tag is the contract: the binaries must be built from the source that tag points at, and
       # the updater compares tauri.conf.json's version. If they disagree, the version bump never got
-      # committed — stop before shipping a mislabelled installer.
+      # committed â€” stop before shipping a mislabelled installer.
       - name: Check the tag matches the app version
         shell: bash
         run: |
           VERSION="$(jq -r .version src-tauri/tauri.conf.json)"
           if [ "v$VERSION" != "${{ steps.rel.outputs.tag }}" ]; then
-            echo "::error::tauri.conf.json says $VERSION but the tag is ${{ steps.rel.outputs.tag }} — was the version bump committed before the tag was cut?"
+            echo "::error::tauri.conf.json says $VERSION but the tag is ${{ steps.rel.outputs.tag }} â€” was the version bump committed before the tag was cut?"
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       # Bake a snapshot of the community player-cipher registry into src-tauri/cipher_configs.json,
       # which is `include_str!`d into the binary. Nothing needing a deciphered stream URL plays
-      # without a config for the current player.js, and the tracked file is deliberately empty —
+      # without a config for the current player.js, and the tracked file is deliberately empty â€”
       # the table is refreshed from these same registries at runtime.
       #
       # So this only covers the case where that refresh can't happen: a first run on a network that
@@ -121,9 +121,9 @@ jobs:
             fi
             echo "::warning::player-cipher registry unusable: $url"
           done
-          echo "::warning::no player-cipher registry reachable — shipping the empty table; clients will fetch it at runtime"
+          echo "::warning::no player-cipher registry reachable â€” shipping the empty table; clients will fetch it at runtime"
 
-      # Bun for frontend package management (replaces pnpm — the frontend/ folder uses bun).
+      # Bun for frontend package management (replaces pnpm â€” the frontend/ folder uses bun).
       - uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 # v2
         with:
           bun-version: latest
@@ -149,7 +149,7 @@ jobs:
       # cold compile on every single release, for ever. Keep this step above the cache.
       #
       # Two flags go in:
-      #   -L native=…\.libmpv   the mpv.lib synthesised further down (link-time only; libmpv2-sys
+      #   -L native=â€¦\.libmpv   the mpv.lib synthesised further down (link-time only; libmpv2-sys
       #                         ships pregenerated bindings and just emits `cargo:rustc-link-lib`)
       #   rust-lld              LLD instead of MSVC's link.exe. Cargo is the bulk of this job, and
       #                         with `codegen-units = 1` + thin LTO most of that is the codegen and
@@ -182,12 +182,12 @@ jobs:
 
       - name: Tauri CLI
         shell: bash
-        # The npm CLI ships a prebuilt binary — `cargo install tauri-cli` would compile it from
+        # The npm CLI ships a prebuilt binary â€” `cargo install tauri-cli` would compile it from
         # source on every cache miss (~5 min for nothing).
         run: npm install -g "@tauri-apps/cli@^2"
 
       # libmpv is the whole reason Windows builds are a chore. The dev package ships the DLL and a
-      # MinGW import lib (libmpv.dll.a) that the MSVC linker cannot consume, and no .def file — so
+      # MinGW import lib (libmpv.dll.a) that the MSVC linker cannot consume, and no .def file â€” so
       # synthesise the .def from the DLL's own export table and build a real mpv.lib. The Rust side
       # just emits `cargo:rustc-link-lib=mpv` (pregenerated bindings, no headers needed).
       - name: Build the libmpv import library
@@ -196,8 +196,15 @@ jobs:
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force -Path "$env:MPV_DIR" | Out-Null
           curl.exe -fsSL -o "$env:MPV_DIR\mpv-dev.7z" "$env:MPV_DEV_URL"
+
+          $expectedHash = "273c079b11ea5575822f972756f4c9a71149a5c10130353abeb8586738938452"
+          $actualHash = (Get-FileHash "$env:MPV_DIR\mpv-dev.7z" -Algorithm SHA256).Hash.ToLower()
+
+          if ($actualHash -ne $expectedHash) {
+            throw "MPV development archive SHA256 mismatch!"
+          }
           7z x "$env:MPV_DIR\mpv-dev.7z" -o"$env:MPV_DIR" -y | Out-Null
-          if (-not (Test-Path "$env:MPV_DIR\libmpv-2.dll")) { throw "libmpv-2.dll not found in the dev package — did MPV_DEV_URL change shape?" }
+          if (-not (Test-Path "$env:MPV_DIR\libmpv-2.dll")) { throw "libmpv-2.dll not found in the dev package â€” did MPV_DEV_URL change shape?" }
 
           # dumpbin/lib live in the MSVC toolchain. (cargo itself finds MSVC on its own; this is
           # only so we can run the two tools.)
@@ -210,7 +217,7 @@ jobs:
           $names = & dumpbin /exports libmpv-2.dll |
             Select-String -Pattern '^\s+\d+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\w+)' |
             ForEach-Object { $_.Matches[0].Groups[1].Value }
-          if ($names.Count -lt 50) { throw "parsed only $($names.Count) exports from libmpv-2.dll — dumpbin output format changed?" }
+          if ($names.Count -lt 50) { throw "parsed only $($names.Count) exports from libmpv-2.dll â€” dumpbin output format changed?" }
           @("EXPORTS") + ($names | ForEach-Object { "    $_" }) | Set-Content -Path mpv.def -Encoding ascii
           & lib /def:mpv.def /name:libmpv-2.dll /out:mpv.lib /machine:x64
           if (-not (Test-Path "$env:MPV_DIR\mpv.lib")) { throw "lib.exe did not produce mpv.lib" }
@@ -220,7 +227,7 @@ jobs:
           # places it next to the exe. Without this the app builds but won't start.
           Copy-Item "$env:MPV_DIR\libmpv-2.dll" "$env:GITHUB_WORKSPACE\src-tauri\libmpv-2.dll" -Force
 
-      # The gitignored src-tauri/lastfm.keys (read by build.rs) obviously isn't in the checkout —
+      # The gitignored src-tauri/lastfm.keys (read by build.rs) obviously isn't in the checkout â€”
       # recreate it from repo secrets so Windows builds scrobble too. Missing secrets are a warning,
       # not a failure: the app is fully functional without Last.fm.
       - name: Last.fm API keys
@@ -234,12 +241,12 @@ jobs:
               "$LASTFM_API_KEY" "$LASTFM_API_SECRET" > src-tauri/lastfm.keys
             echo "lastfm.keys written"
           else
-            echo "::warning::LASTFM_API_KEY / LASTFM_API_SECRET secrets not set — this Windows build ships without Last.fm scrobbling"
+            echo "::warning::LASTFM_API_KEY / LASTFM_API_SECRET secrets not set â€” this Windows build ships without Last.fm scrobbling"
           fi
 
       # Neon artwork upload credentials for Discord Rich Presence cover images on local songs.
       # These are embedded at compile time via NEON_ARTWORK_URL and NEON_ARTWORK_TOKEN env vars.
-      # Missing secrets are a warning — Discord RPC still works, just shows text-only for local tracks.
+      # Missing secrets are a warning â€” Discord RPC still works, just shows text-only for local tracks.
       - name: Neon artwork upload credentials
         shell: bash
         env:
@@ -252,13 +259,13 @@ jobs:
             echo "NEON_ARTWORK_TOKEN=$MAPLE_UPLOAD_TOKEN" >> "$GITHUB_ENV"
             echo "Neon artwork credentials configured for Discord RPC"
           else
-            echo "::warning::NEON_FUNCTION_HOST_SUFFIX / MAPLE_UPLOAD_TOKEN secrets not set — Discord RPC won't show cover art for local songs"
+            echo "::warning::NEON_FUNCTION_HOST_SUFFIX / MAPLE_UPLOAD_TOKEN secrets not set â€” Discord RPC won't show cover art for local songs"
           fi
 
       - name: Build + sign the installers
         shell: bash
         env:
-          # Scoped to this step only — no other step (or third-party action) sees the signing key.
+          # Scoped to this step only â€” no other step (or third-party action) sees the signing key.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # NOTE: RUSTFLAGS is deliberately NOT set here. It is exported to $GITHUB_ENV before
@@ -266,17 +273,17 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
-            echo "::error::TAURI_SIGNING_PRIVATE_KEY secret is not set — the build would produce unsignable installers"
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY secret is not set â€” the build would produce unsignable installers"
             exit 1
           fi
 
           echo "building with RUSTFLAGS=${RUSTFLAGS:-<unset>}"
           (cd frontend && bun run build)
           # beforeBuildCommand emptied: we just ran it. Left on, tauri runs `bun run build` from the
-          # repo root, which has no package.json — the frontend/ build is done manually here.
-          tauri build --config '{"build":{"beforeBuildCommand":""}}'   # → target/release/bundle/{nsis,msi}/
+          # repo root, which has no package.json â€” the frontend/ build is done manually here.
+          tauri build --config '{"build":{"beforeBuildCommand":""}}'   # â†’ target/release/bundle/{nsis,msi}/
 
-      - name: Dry run — built and signed, attaching nothing
+      - name: Dry run â€” built and signed, attaching nothing
         if: ${{ inputs.dry_run }}
         shell: bash
         run: echo "dry_run - build and signing succeeded; release assets left untouched."
@@ -311,7 +318,7 @@ jobs:
           # latest.json un-merged, so Windows installs are never offered the update, and nothing
           # says so. All calls are idempotent (`--clobber` on upload, read-only download), so
           # retrying is safe.
-          retry() { # retry <attempts> <command…>
+          retry() { # retry <attempts> <commandâ€¦>
             local n="$1"; shift
             local i
             for ((i = 1; i <= n; i++)); do
@@ -321,12 +328,12 @@ jobs:
             done
             return 1
           }
-          fetch_manifest() { # fetch_manifest <dir> — seeds an empty manifest only for the merge dir
+          fetch_manifest() { # fetch_manifest <dir> â€” seeds an empty manifest only for the merge dir
             if [ "$1" = manifest ] && \
                ! gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1" 2>/dev/null; then
               rm -rf "$1"; mkdir -p "$1"
               printf '{"version":"%s","platforms":{}}\n' "$VERSION" > "$1/latest.json"
-              echo "::notice::release had no latest.json — seeded an empty manifest for $VERSION"
+              echo "::notice::release had no latest.json â€” seeded an empty manifest for $VERSION"
             else
               rm -rf "$1" && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1"
             fi
@@ -340,7 +347,7 @@ jobs:
             echo "::error::expected installer not found: $EXE"; find target/release/bundle -maxdepth 2; exit 1
           fi
           if [ ! -f "$SIG" ]; then
-            echo "::error::no .sig next to the installer — signing key missing, or createUpdaterArtifacts got turned off"; exit 1
+            echo "::error::no .sig next to the installer â€” signing key missing, or createUpdaterArtifacts got turned off"; exit 1
           fi
 
           retry 3 gh release upload "$TAG" "$EXE" "$SIG" ${MSI:+"$MSI"} --clobber --repo "$GITHUB_REPOSITORY"
@@ -348,7 +355,7 @@ jobs:
           # latest.json is the one thing both release workflows write, and they now run in parallel.
           # There is no compare-and-swap on release assets, so: merge, upload, read back, and retry
           # if the other job clobbered us in between. Whoever loses a round re-merges onto the
-          # winner's copy, so it converges — normally on the first attempt, worst case the second.
+          # winner's copy, so it converges â€” normally on the first attempt, worst case the second.
           URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$(basename "$EXE")"
           for attempt in 1 2 3 4 5; do
             retry 3 fetch_manifest manifest
