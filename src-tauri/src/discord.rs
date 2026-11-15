@@ -826,12 +826,11 @@ mod tests {
         let long = format!("https://example.com/{}", "a".repeat(300));
         assert_eq!(discord_thumb(&long), None, "over-long URLs are dropped, not sent");
     }
-}
 
-/// Stale artwork completions (uploads that finished after the user already switched tracks)
-/// must be ignored, not applied — the new track's artwork must not be replaced by the old one's.
-#[test]
-fn stale_artwork_is_rejected() {
+    /// Stale artwork completions (uploads that finished after the user already switched tracks)
+    /// must be ignored, not applied — the new track's artwork must not be replaced by the old one's.
+    #[test]
+    fn stale_artwork_is_rejected() {
     let mut p = playing("LOCAL:/music/old.mp3", 30.0);
     p.duration = 200.0;
     p.track.as_mut().unwrap().thumbnail = None; // no artwork yet
@@ -861,4 +860,5 @@ fn stale_artwork_is_rejected() {
         None,
         "stale video_id: artwork ignored, new track's None preserved"
     );
+    }
 }

@@ -523,6 +523,29 @@ impl Db {
         }
         out
     }
+
+    // --- artwork url cache (cloud-hosted local artwork for Discord) ---------------------------
+
+    /// Get cached public URL for artwork by its SHA-256 hash. Artwork URLs never expire (content-
+    /// addressed object storage), so any hit is valid forever.
+    pub fn get_artwork_url(&self, hash: &str) -> Option<String> {
+        let conn = self.0.lock().unwrap();
+        conn.query_row("SELECT public_url FROM artwork_urls WHERE sha256_hash = ?1", [hash], |r| {
+            r.get(0)
+        })
+        .ok()
+    }
+
+    /// Cache an artwork URL permanently. Returns error only if the write fails.
+    pub fn set_artwork_url(&self, hash: &str, url: &str) -> rusqlite::Result<()> {
+        let conn = self.0.lock().unwrap();
+        conn.execute(
+            "INSERT INTO artwork_urls(sha256_hash, public_url, created_at) VALUES(?1, ?2, ?3)
+                 ON CONFLICT(sha256_hash) DO UPDATE SET public_url = excluded.public_url",
+            rusqlite::params![hash, url, now_secs()],
+        )?;
+        Ok(())
+    }
 }
 
 const LOCAL_TRACK_UPSERT: &str =
@@ -720,29 +743,6 @@ mod tests {
         assert_eq!(d.get_setting("selected_identity_json"), None);
         assert_eq!(d.get_setting("data_sync_id"), None);
         assert_eq!(d.get_setting("account_json"), None);
-    }
-
-    // --- artwork url cache (cloud-hosted local artwork for Discord) ---------------------------
-
-    /// Get cached public URL for artwork by its SHA-256 hash. Artwork URLs never expire (content-
-    /// addressed object storage), so any hit is valid forever.
-    pub fn get_artwork_url(&self, hash: &str) -> Option<String> {
-        let conn = self.0.lock().unwrap();
-        conn.query_row("SELECT public_url FROM artwork_urls WHERE sha256_hash = ?1", [hash], |r| {
-            r.get(0)
-        })
-        .ok()
-    }
-
-    /// Cache an artwork URL permanently. Returns error only if the write fails.
-    pub fn set_artwork_url(&self, hash: &str, url: &str) -> rusqlite::Result<()> {
-        let conn = self.0.lock().unwrap();
-        conn.execute(
-            "INSERT INTO artwork_urls(sha256_hash, public_url, created_at) VALUES(?1, ?2, ?3)
-                 ON CONFLICT(sha256_hash) DO UPDATE SET public_url = excluded.public_url",
-            rusqlite::params![hash, url, now_secs()],
-        )?;
-        Ok(())
     }
 }
 
