@@ -204,7 +204,7 @@ jobs:
             throw "MPV development archive SHA256 mismatch!"
           }
           7z x "$env:MPV_DIR\mpv-dev.7z" -o"$env:MPV_DIR" -y | Out-Null
-          if (-not (Test-Path "$env:MPV_DIR\libmpv-2.dll")) { throw "libmpv-2.dll not found in the dev package â€” did MPV_DEV_URL change shape?" }
+          if (-not (Test-Path "$env:MPV_DIR\libmpv-2.dll")) { throw "libmpv-2.dll missing. Check MPV_DEV_URL and archive contents." }
 
           # dumpbin/lib live in the MSVC toolchain. (cargo itself finds MSVC on its own; this is
           # only so we can run the two tools.)
