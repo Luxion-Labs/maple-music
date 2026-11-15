@@ -217,7 +217,7 @@ jobs:
           $names = & dumpbin /exports libmpv-2.dll |
             Select-String -Pattern '^\s+\d+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\w+)' |
             ForEach-Object { $_.Matches[0].Groups[1].Value }
-          if ($names.Count -lt 50) { throw "parsed only $($names.Count) exports from libmpv-2.dll â€” dumpbin output format changed?" }
+          if ($names.Count -lt 50) { throw "Too few exports parsed from libmpv-2.dll. Check dumpbin output format." }
           @("EXPORTS") + ($names | ForEach-Object { "    $_" }) | Set-Content -Path mpv.def -Encoding ascii
           & lib /def:mpv.def /name:libmpv-2.dll /out:mpv.lib /machine:x64
           if (-not (Test-Path "$env:MPV_DIR\mpv.lib")) { throw "lib.exe did not produce mpv.lib" }
