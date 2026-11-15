@@ -241,6 +241,24 @@ jobs:
             echo "::warning::LASTFM_API_KEY / LASTFM_API_SECRET secrets not set — this Windows build ships without Last.fm scrobbling"
           fi
 
+      # Neon artwork upload credentials for Discord Rich Presence cover images on local songs.
+      # These are embedded at compile time via NEON_ARTWORK_URL and NEON_ARTWORK_TOKEN env vars.
+      # Missing secrets are a warning — Discord RPC still works, just shows text-only for local tracks.
+      - name: Neon artwork upload credentials
+        shell: bash
+        env:
+          NEON_FUNCTION_HOST_SUFFIX: ${{ secrets.NEON_FUNCTION_HOST_SUFFIX }}
+          MAPLE_UPLOAD_TOKEN: ${{ secrets.MAPLE_UPLOAD_TOKEN }}
+        run: |
+          if [ -n "$NEON_FUNCTION_HOST_SUFFIX" ] && [ -n "$MAPLE_UPLOAD_TOKEN" ]; then
+            NEON_URL="https://br-delicate-cherry-bbfmt591-artworkupload${NEON_FUNCTION_HOST_SUFFIX}/"
+            echo "NEON_ARTWORK_URL=$NEON_URL" >> "$GITHUB_ENV"
+            echo "NEON_ARTWORK_TOKEN=$MAPLE_UPLOAD_TOKEN" >> "$GITHUB_ENV"
+            echo "Neon artwork credentials configured for Discord RPC"
+          else
+            echo "::warning::NEON_FUNCTION_HOST_SUFFIX / MAPLE_UPLOAD_TOKEN secrets not set — Discord RPC won't show cover art for local songs"
+          fi
+
       - name: Build + sign the installers
         shell: bash
         env:

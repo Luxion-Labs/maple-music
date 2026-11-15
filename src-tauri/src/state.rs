@@ -1597,6 +1597,25 @@ impl AppState {
         }
         if let Some(d) = &self.discord {
             d.set_track(item);
+            // If this is a local track with artwork, trigger background upload. The upload worker
+            // sends the result back to Discord when ready — never blocks here.
+            if let Some(local_path) =
+                crate::artwork::should_upload_artwork(&item.video_id, item.thumbnail.as_deref())
+            {
+                let video_id = item.video_id.clone();
+                let db = self.db.clone();
+                let discord = d.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Some(config) = crate::artwork::ArtworkConfig::from_db(&db) {
+                        if let Some(url) =
+                            crate::artwork::upload_artwork(&local_path, &config, &db).await
+                        {
+                            // Only send if URL is within Discord's length limit (already validated in artwork.rs)
+                            discord.set_artwork(video_id, url);
+                        }
+                    }
+                });
+            }
         }
         self.lastfm.set_track(item);
         // New track ⇒ let the next position tick through immediately instead of waiting out the

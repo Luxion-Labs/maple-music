@@ -89,6 +89,12 @@ enum Msg {
     /// A real play/pause transition (mpv's pause flag), never inferred from position ticks.
     Playing(bool),
     Enabled(bool),
+    /// Artwork URL ready for a local track. Applied only if the video_id still matches the current
+    /// track — stale uploads (completed after the user skipped) are ignored.
+    ArtworkReady {
+        video_id: String,
+        url: String,
+    },
 }
 
 #[derive(Clone)]
@@ -102,6 +108,7 @@ struct Track {
 
 /// App-side handle to the presence thread. `None` when the thread couldn't be spawned; every push
 /// is then a no-op.
+#[derive(Clone)]
 pub struct DiscordHandle {
     tx: Sender<Msg>,
 }
@@ -115,13 +122,21 @@ impl DiscordHandle {
             album: item.album.clone(),
             // Upscale here (stored thumbs are often 60px) and drop over-long URLs outright.
             // A local track's artwork is a path on this machine: Discord can't fetch it, and it
-            // would put the user's directory layout on their profile. Send none.
+            // would put the user's directory layout on their profile. Send none here — the artwork
+            // upload worker sends Msg::ArtworkReady when the cloud URL is available.
             thumbnail: item
                 .thumbnail
                 .as_deref()
                 .filter(|_| !crate::local::is_local_song(&item.video_id))
                 .and_then(discord_thumb),
         })));
+    }
+
+    /// Update artwork URL for the current track. Called by the artwork upload worker when a local
+    /// track's cloud-hosted image is ready. The Discord worker only applies it if the video_id
+    /// still matches — stale completions are silently ignored.
+    pub fn set_artwork(&self, video_id: String, url: String) {
+        let _ = self.tx.send(Msg::ArtworkReady { video_id, url });
     }
 
     /// mpv's reported track length — the only source of a real duration (`SongItem::duration` is a
@@ -299,6 +314,26 @@ impl Presence {
                     self.enabled = on;
                     if !on {
                         self.disconnect();
+                    }
+                }
+            }
+            Msg::ArtworkReady { video_id, url } => {
+                // Only update if this artwork belongs to the currently playing track. Ignore stale
+                // completions — a slow upload finishing after the user skipped must not replace the
+                // new track's artwork with the old one's.
+                if let Some(track) = &mut self.track {
+                    if track.video_id == video_id {
+                        tracing::debug!(video_id, url, "artwork ready for current track");
+                        track.thumbnail = Some(url);
+                        // Force a re-push even if wants_push() wouldn't see a change: the artwork
+                        // landing is exactly the change that needs reaching Discord.
+                        self.sent = None;
+                    } else {
+                        tracing::debug!(
+                            completed_for = video_id,
+                            current = track.video_id,
+                            "ignoring stale artwork upload"
+                        );
                     }
                 }
             }
@@ -791,4 +826,39 @@ mod tests {
         let long = format!("https://example.com/{}", "a".repeat(300));
         assert_eq!(discord_thumb(&long), None, "over-long URLs are dropped, not sent");
     }
+}
+
+/// Stale artwork completions (uploads that finished after the user already switched tracks)
+/// must be ignored, not applied — the new track's artwork must not be replaced by the old one's.
+#[test]
+fn stale_artwork_is_rejected() {
+    let mut p = playing("LOCAL:/music/old.mp3", 30.0);
+    p.duration = 200.0;
+    p.track.as_mut().unwrap().thumbnail = None; // no artwork yet
+
+    // Upload completes for "old"
+    p.apply(Msg::ArtworkReady {
+        video_id: "LOCAL:/music/old.mp3".into(),
+        url: "https://storage.example.com/old.jpg".into(),
+    });
+    assert_eq!(
+        p.track.as_ref().unwrap().thumbnail.as_deref(),
+        Some("https://storage.example.com/old.jpg"),
+        "matching video_id: artwork applied"
+    );
+
+    // User skips to a new track before the old upload finished sending the message
+    p.apply(Msg::Track(track("LOCAL:/music/new.mp3")));
+    p.track.as_mut().unwrap().thumbnail = None;
+
+    // The old artwork message arrives
+    p.apply(Msg::ArtworkReady {
+        video_id: "LOCAL:/music/old.mp3".into(),
+        url: "https://storage.example.com/old.jpg".into(),
+    });
+    assert_eq!(
+        p.track.as_ref().unwrap().thumbnail,
+        None,
+        "stale video_id: artwork ignored, new track's None preserved"
+    );
 }
