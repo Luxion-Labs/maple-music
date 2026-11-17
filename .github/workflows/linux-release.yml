@@ -331,6 +331,8 @@ jobs:
         run: |
           set -euo pipefail
           APPDIR="$PWD/target/release/bundle/appimage/maple.AppDir"
+          # The tag's script has CRLF endings; dash inside the containers would choke on pipefail\r.
+          sed -i 's/\r$//' scripts/appdir-foreign-check.sh
           CHECK="$PWD/scripts/appdir-foreign-check.sh"
           IMAGES="debian:sid archlinux:latest"
 
