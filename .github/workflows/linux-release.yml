@@ -332,7 +332,9 @@ jobs:
           set -euo pipefail
           APPDIR="$PWD/target/release/bundle/appimage/maple.AppDir"
           # The tag's script has CRLF endings; dash inside the containers would choke on pipefail\r.
-          sed -i 's/\r$//' scripts/appdir-foreign-check.sh
+          # It also uses `pacman -Sy` (partial upgrade), which breaks the archlinux image whenever
+          # a new openssl lands in the repos — force a full -Syu so dependencies stay consistent.
+          sed -i 's/\r$//; s/pacman -Sy --noconfirm/pacman -Syu --noconfirm/' scripts/appdir-foreign-check.sh
           CHECK="$PWD/scripts/appdir-foreign-check.sh"
           IMAGES="debian:sid archlinux:latest"
 
