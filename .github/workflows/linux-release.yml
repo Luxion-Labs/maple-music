@@ -234,6 +234,18 @@ jobs:
           # runs `bun run build` from the repo root — which has no package.json. The frontend/
           # build is done manually here.
           tauri build --bundles appimage --config '{"build":{"beforeBuildCommand":""}}'
+          # Normalize the bundler's output to what fix-appdir-tls.sh and the upload step expect:
+          # productName "Maple" makes it emit Maple_*.AppImage (lowercase glob below), and tauri's
+          # newer bundler deletes the unpacked AppDir after packaging. Extract it back if absent.
+          BUNDLE_DIR=target/release/bundle/appimage
+          for f in "$BUNDLE_DIR"/Maple_*.AppImage; do
+            [ -e "$f" ] || continue
+            mv "$f" "$BUNDLE_DIR/$(basename "$f" | tr 'A-Z' 'a-z')"
+          done
+          rm -f "$BUNDLE_DIR"/Maple_*.AppImage.sig
+          if [ ! -d "$BUNDLE_DIR/maple.AppDir" ]; then
+            (cd "$BUNDLE_DIR" && ./maple_*.AppImage --appimage-extract >/dev/null && mv squashfs-root maple.AppDir)
+          fi
           # Strip the bundled TLS trust stack + gio modules out of the AppDir and repack: they are
           # coupled to the build host's config and leave the webview with no TLS backend anywhere
           # else. Repacking invalidates the bundler's signature, so the script re-signs — which is
