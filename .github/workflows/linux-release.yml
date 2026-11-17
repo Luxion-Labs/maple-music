@@ -240,7 +240,8 @@ jobs:
           BUNDLE_DIR=target/release/bundle/appimage
           for f in "$BUNDLE_DIR"/Maple_*.AppImage; do
             [ -e "$f" ] || continue
-            mv "$f" "$BUNDLE_DIR/$(basename "$f" | tr 'A-Z' 'a-z')"
+            # Only the product-name prefix is capitalized; keep the .AppImage extension intact.
+            mv "$f" "$BUNDLE_DIR/maple${f##*/Maple}"
           done
           rm -f "$BUNDLE_DIR"/Maple_*.AppImage.sig
           if [ ! -d "$BUNDLE_DIR/maple.AppDir" ]; then
