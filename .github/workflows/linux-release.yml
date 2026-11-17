@@ -247,6 +247,28 @@ jobs:
           if [ ! -d "$BUNDLE_DIR/maple.AppDir" ]; then
             (cd "$BUNDLE_DIR" && ./maple_*.AppImage --appimage-extract >/dev/null && mv squashfs-root maple.AppDir)
           fi
+          # Newer linuxdeploy plugins pull in GStreamer libs that need libgmp and libpipewire;
+          # the tag's repair script predates them. Bundle them (and their transitive deps) from
+          # this runner into the AppDir before the script repacks it.
+          QUEUE="libgmp.so.10 libpipewire-0.3.so.0"
+          DONE=""
+          while [ -n "$QUEUE" ]; do
+            lib="${QUEUE%% *}"
+            QUEUE="${QUEUE#* }"
+            [ "$QUEUE" = "$lib" ] && QUEUE=""
+            case " $DONE " in *" $lib "*) continue;; esac
+            DONE="$DONE $lib"
+            [ -e "$BUNDLE_DIR/maple.AppDir/usr/lib/$lib" ] && continue
+            src="$(ldconfig -p | awk -v l="$lib" '$1==l {print $NF; exit}')"
+            [ -n "$src" ] || continue
+            cp -L "$src" "$BUNDLE_DIR/maple.AppDir/usr/lib/$lib"
+            echo "==> bundled $lib from $src"
+            for dep in $(objdump -p "$src" | awk '/NEEDED/{print $2}'); do
+              case "$dep" in libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|ld-linux*|libgcc_s.so.1|libstdc++.so.6) continue;; esac
+              [ -e "$BUNDLE_DIR/maple.AppDir/usr/lib/$dep" ] && continue
+              QUEUE="$QUEUE $dep"
+            done
+          done
           # Strip the bundled TLS trust stack + gio modules out of the AppDir and repack: they are
           # coupled to the build host's config and leave the webview with no TLS backend anywhere
           # else. Repacking invalidates the bundler's signature, so the script re-signs — which is
