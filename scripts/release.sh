@@ -52,16 +52,16 @@ CARGO_VERSION="$(sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -1)"
 [ "$CARGO_VERSION" = "$VERSION" ] \
   || die "Cargo.toml says $CARGO_VERSION but src-tauri/tauri.conf.json says $VERSION. Bump both"
 
-# The rpm is built from this working tree; the tag is cut from remote master. Anything uncommitted
+# The rpm is built from this working tree; the tag is cut from remote main. Anything uncommitted
 # means the shipped rpm and the source the tag names are different code.
 git diff --quiet && git diff --cached --quiet \
   || die "uncommitted changes to tracked files. Commit or stash them first"
 
-# THE rule. `gh release create` creates the tag from whatever the REMOTE master points at, so
+# THE rule. `gh release create` creates the tag from whatever the REMOTE main points at, so
 # releasing without pushing tags code the binaries were not built from.
-git fetch --quiet origin master
-[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" ] \
-  || die "HEAD ($(git rev-parse --short HEAD)) is not origin/master ($(git rev-parse --short origin/master)). Run: git push origin master"
+git fetch --quiet origin main
+[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] \
+  || die "HEAD ($(git rev-parse --short HEAD)) is not origin/main ($(git rev-parse --short origin/main)). Run: git push origin main"
 
 ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 \
   || die "$TAG is already published. Bump the version"
@@ -147,17 +147,17 @@ BEFORE_LINUX="$(latest_run "Linux release binaries")"
 BEFORE_WIN="$(latest_run "Windows release binaries")"
 BEFORE_MAC="$(latest_run "macOS release binaries")"
 
-# Dispatched from master rather than fired by the `release: published` event, and that ref matters:
+# Dispatched from main rather than fired by the `release: published` event, and that ref matters:
 # Actions caches are readable only from the ref that wrote them plus the default branch. A
 # release-triggered run executes on the tag ref, so it could never reuse the previous release's
 # cache — Windows recompiled all of Rust from scratch every time, 11m25s of a 15m run. Dispatching
-# from master shares one cache across releases. All three workflows check out $TAG regardless, so
+# from main shares one cache across releases. All three workflows check out $TAG regardless, so
 # the binaries still come from the tagged source. They also run in parallel with each other, and now
 # with the local rpm build below as well.
 echo "==> Dispatching the build workflows…"
-gh workflow run "Linux release binaries"   --repo "$REPO" --ref master -f tag="$TAG"
-gh workflow run "Windows release binaries" --repo "$REPO" --ref master -f tag="$TAG"
-gh workflow run "macOS release binaries"   --repo "$REPO" --ref master -f tag="$TAG"
+gh workflow run "Linux release binaries"   --repo "$REPO" --ref main -f tag="$TAG"
+gh workflow run "Windows release binaries" --repo "$REPO" --ref main -f tag="$TAG"
+gh workflow run "macOS release binaries"   --repo "$REPO" --ref main -f tag="$TAG"
 
 RUN_LINUX="$(wait_for_run "Linux release binaries" "$BEFORE_LINUX" || true)"
 RUN_WIN="$(wait_for_run "Windows release binaries" "$BEFORE_WIN" || true)"
@@ -217,9 +217,9 @@ else
   echo >&2
   echo "==> $TAG IS PUBLISHED BUT INCOMPLETE. Check what failed, then re-dispatch that workflow:" >&2
   echo "      gh run list --repo $REPO --limit 5" >&2
-  echo "      gh workflow run \"Linux release binaries\"   --repo $REPO --ref master -f tag=$TAG" >&2
-  echo "      gh workflow run \"Windows release binaries\" --repo $REPO --ref master -f tag=$TAG" >&2
-  echo "      gh workflow run \"macOS release binaries\"   --repo $REPO --ref master -f tag=$TAG" >&2
+  echo "      gh workflow run \"Linux release binaries\"   --repo $REPO --ref main -f tag=$TAG" >&2
+  echo "      gh workflow run \"Windows release binaries\" --repo $REPO --ref main -f tag=$TAG" >&2
+  echo "      gh workflow run \"macOS release binaries\"   --repo $REPO --ref main -f tag=$TAG" >&2
   echo "    Only fixes to .github/workflows/ take effect on a re-dispatch; anything in scripts/," >&2
   echo "    src/ or ui/ needs a new version, since the run checks out the tag." >&2
   exit 1

@@ -21,7 +21,7 @@ name: Windows release binaries
 # and a release-triggered run executes on the *tag* ref, so it can never read the cache any previous
 # release wrote. This job was recompiling all of Rust from scratch every single time, 11m25s of a
 # 15m run, while dutifully saving a 0.55 GB cache nothing would ever read. A dispatched run executes
-# on master, so the cache is shared release to release; the checkout below still pins the build to
+# on main, so the cache is shared release to release; the checkout below still pins the build to
 # the tag. scripts/release.sh dispatches both workflows.
 # Consequence: publishing a release from the GitHub UI builds nothing. Use the script.
 on:

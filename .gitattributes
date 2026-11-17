@@ -1,0 +1,3 @@
+# Shell scripts must keep LF endings: with CRLF, a trailing `\` line continuation
+# is followed by `\r` and bash aborts with "syntax error near unexpected token".
+*.sh text eol=lf

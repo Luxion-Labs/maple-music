@@ -34,7 +34,7 @@ name: macOS release binaries
 
 # DISPATCH ONLY, ON PURPOSE, for the reason spelled out in the other two workflows: Actions caches
 # are ref-scoped, and a run triggered by `release: published` executes on the tag ref, so it can
-# never read the cache the previous release wrote. Dispatching from master shares one cache across
+# never read the cache the previous release wrote. Dispatching from main shares one cache across
 # releases while the checkout below still pins the build to the tag.
 on:
   workflow_dispatch:
@@ -85,7 +85,7 @@ jobs:
       # updater compares tauri.conf.json's version against it.
       #
       # A dry run is allowed to disagree, because that is the only way to test this workflow against
-      # a branch (`tag: master`) instead of a published tag. Nothing is uploaded on a dry run, so a
+      # a branch (`tag: main`) instead of a published tag. Nothing is uploaded on a dry run, so a
       # mislabelled build cannot escape.
       - name: Check the tag matches the app version
         run: |

@@ -27,7 +27,7 @@ name: Linux release binaries
 # a run can read caches from its own ref and from the default branch, nothing else. A run triggered
 # by a release executes on the *tag* ref, so every such build wrote a cache no later run could ever
 # read and then recompiled from scratch. Windows was paying 11m25s of cold Rust compile on every
-# single release because of it. A dispatched run executes on master, so the cache is shared, while
+# single release because of it. A dispatched run executes on main, so the cache is shared, while
 # the checkout below still pins the build to the tag. scripts/release.sh dispatches both workflows.
 # Consequence: publishing a release from the GitHub UI builds nothing. Use the script.
 on:
