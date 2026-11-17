@@ -1305,7 +1305,8 @@ mod tests {
 /// Connect to Discord with a user or bot token (Android only).
 /// Desktop uses local IPC via discord.rs instead.
 #[tauri::command]
-pub async fn discord_connect(_app: tauri::AppHandle, _token: String) -> Result<String, String> {
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
+pub async fn discord_connect(app: tauri::AppHandle, token: String) -> Result<String, String> {
     #[cfg(target_os = "android")]
     {
         maple_discord_plugin::connect_with_token(&app, &token).await
@@ -1319,7 +1320,8 @@ pub async fn discord_connect(_app: tauri::AppHandle, _token: String) -> Result<S
 
 /// Open Discord WebView login to auto-capture token (Android only).
 #[tauri::command]
-pub async fn discord_webview_login(_app: tauri::AppHandle) -> Result<String, String> {
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
+pub async fn discord_webview_login(app: tauri::AppHandle) -> Result<String, String> {
     #[cfg(target_os = "android")]
     {
         maple_discord_plugin::open_webview_login(&app).await
@@ -1332,13 +1334,14 @@ pub async fn discord_webview_login(_app: tauri::AppHandle) -> Result<String, Str
 
 /// Update Discord Rich Presence activity (Android only).
 #[tauri::command]
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
 pub async fn discord_update_activity(
-    _app: tauri::AppHandle,
-    _app_name: String,
-    _application_id: String,
-    _details: String,
-    _state: String,
-    _thumbnail: Option<String>,
+    app: tauri::AppHandle,
+    app_name: String,
+    application_id: String,
+    details: String,
+    state: String,
+    thumbnail: Option<String>,
 ) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
@@ -1361,7 +1364,8 @@ pub async fn discord_update_activity(
 
 /// Disconnect from Discord (Android only).
 #[tauri::command]
-pub async fn discord_disconnect(_app: tauri::AppHandle) -> Result<(), String> {
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
+pub async fn discord_disconnect(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
         maple_discord_plugin::disconnect(&app).await
