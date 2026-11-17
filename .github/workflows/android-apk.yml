@@ -113,7 +113,10 @@ jobs:
       - name: Tauri CLI
         uses: taiki-e/install-action@v2
         with:
-          tool: tauri-cli
+          # PINNED: tauri-cli 2.12.5 generates an Android gradle project whose rustBuildArm64Release
+          # task has no `projectDir`, which Gradle 8.14 rejects. 2.11.4 is the last known-good
+          # generator (and what this repo's gen/android was built with locally).
+          tool: tauri-cli@2.11.4
 
       # Regenerates the gitignored Android project fresh each run. compileSdk/targetSdk come from
       # the CLI defaults; the runner's SDK manager picks up anything missing (licenses accepted).

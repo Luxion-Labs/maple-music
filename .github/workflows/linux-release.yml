@@ -238,8 +238,10 @@ jobs:
           # coupled to the build host's config and leave the webview with no TLS backend anywhere
           # else. Repacking invalidates the bundler's signature, so the script re-signs — which is
           # why it runs inside this step, where the key is in scope.
-          # Invoke via bash: the workflow checks out the release tag, where this script may be
-          # mode 100644, so direct execution would fail with exit 126.
+          # The workflow checks out the release tag, where this script is mode 100644 with CRLF
+          # endings: direct execution fails with exit 126, and bash reports a bogus
+          # "set: pipefail: invalid option name" from the trailing \r. Normalize it in place first.
+          sed -i 's/\r$//' scripts/fix-appdir-tls.sh
           bash scripts/fix-appdir-tls.sh
 
       # v0.2.11 shipped an AppImage that couldn't start on a host without JACK, because libmpv
